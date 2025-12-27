@@ -31,19 +31,18 @@ Plan your rack layout. Drag your devices in, move them around, export it. It run
 - **Export to PNG, PDF, SVG** for your documentation or for printing and staring at
 - **QR code sharing** - your layout lives in a URL, scan it and it just shows up
 
-## Get Started
+## Get Started 
+### **Use it right now:** [count.racku.la](https://count.racku.la)
 
-**Use it right now:** [count.racku.la](https://count.racku.la)
+### Selfhost with Docker
 
-**Selfhost with Docker**
-
-Run: 
+#### Docker Run
 
 ```bash
 docker run -d -p 8080:80 ghcr.io/RackulaLives/Rackula:latest
 ```
 
-Or Compose:
+#### Docker Compose
 
 ```bash
 curl -O https://raw.githubusercontent.com/RackulaLives/Rackula/main/docker-compose.yml
@@ -52,7 +51,7 @@ docker compose up -d
 
 Then open `http://localhost:8080` and get after it.
 
-**Build from source:**
+### Build from source
 
 ```bash
 git clone https://github.com/RackulaLives/Rackula.git
