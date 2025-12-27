@@ -1,7 +1,6 @@
 <p align="center">
   <a href="https://count.racku.la">
     <img src="assets/Rackula-lockup-dark.svg#gh-dark-mode-only" alt="Rackula" width="420">
-    <img src="assets/Rackula-lockup-light.svg#gh-light-mode-only" alt="Rackula" width="420">
   </a>
 </p>
 
