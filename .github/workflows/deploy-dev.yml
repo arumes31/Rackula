@@ -49,7 +49,7 @@ jobs:
 
   deploy:
     needs: build-and-deploy
-    runs-on: [self-hosted, rackula-vps]
+    runs-on: [self-hosted, vps-rackula]
     permissions: {}
 
     steps:
