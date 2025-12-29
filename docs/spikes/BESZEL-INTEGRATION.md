@@ -20,6 +20,7 @@ Can Beszel be integrated as a monitoring backend while Rackula serves as the fro
 ### Recommendation
 
 Proceed with a phased implementation:
+
 1. **Phase 1 (MVP):** Manual device-to-system linking with basic metrics display
 2. **Phase 2:** Real-time subscriptions and status indicators
 3. **Phase 3:** Historical charts and alert integration
@@ -51,14 +52,14 @@ Proceed with a phased implementation:
 
 ### 1.2 Technology Stack
 
-| Component | Technology |
-|-----------|------------|
-| Backend | Go + PocketBase (SQLite) |
-| Frontend | React + TypeScript + Shadcn UI |
-| Data Format | JSON (REST) + CBOR (Agent comms) |
-| Real-time | PocketBase subscriptions (WebSocket) |
-| Agent Comms | SSH or WebSocket |
-| Auth | PocketBase auth (email/password, OAuth) |
+| Component   | Technology                              |
+| ----------- | --------------------------------------- |
+| Backend     | Go + PocketBase (SQLite)                |
+| Frontend    | React + TypeScript + Shadcn UI          |
+| Data Format | JSON (REST) + CBOR (Agent comms)        |
+| Real-time   | PocketBase subscriptions (WebSocket)    |
+| Agent Comms | SSH or WebSocket                        |
+| Auth        | PocketBase auth (email/password, OAuth) |
 
 ---
 
@@ -85,26 +86,26 @@ pb.collection('systems').subscribe('*', (data) => {
 
 ### 2.2 Custom Beszel Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/beszel/getkey` | GET | Hub version + SSH public key |
-| `/api/beszel/first-run` | GET | Check if first-time setup |
-| `/api/beszel/containers/logs` | GET | Container logs |
-| `/api/beszel/containers/info` | GET | Container details |
-| `/api/beszel/systemd/info` | GET | Systemd service details |
-| `/api/beszel/smart/refresh` | POST | Refresh SMART data |
+| Endpoint                      | Method | Purpose                      |
+| ----------------------------- | ------ | ---------------------------- |
+| `/api/beszel/getkey`          | GET    | Hub version + SSH public key |
+| `/api/beszel/first-run`       | GET    | Check if first-time setup    |
+| `/api/beszel/containers/logs` | GET    | Container logs               |
+| `/api/beszel/containers/info` | GET    | Container details            |
+| `/api/beszel/systemd/info`    | GET    | Systemd service details      |
+| `/api/beszel/smart/refresh`   | POST   | Refresh SMART data           |
 
 ### 2.3 Data Collections
 
-| Collection | Purpose | Key Fields |
-|------------|---------|------------|
-| `systems` | Monitored systems | `name`, `host`, `port`, `status`, `info` (JSON) |
-| `system_stats` | Time-series metrics | `system`, `stats` (JSON), `type` (1m/10m/20m/120m/480m) |
-| `system_details` | Static system info | `hostname`, `os`, `kernel`, `cpu`, `cores`, `memory` |
-| `containers` | Docker/Podman | `name`, `image`, `cpu`, `memory`, `status` |
-| `container_stats` | Container time-series | `system`, `stats` (JSON), `type` |
-| `alerts` | User-defined alerts | `system`, `name`, `value`, `triggered` |
-| `smart_devices` | Disk health | `system`, `name`, `model`, `state`, `capacity` |
+| Collection        | Purpose               | Key Fields                                              |
+| ----------------- | --------------------- | ------------------------------------------------------- |
+| `systems`         | Monitored systems     | `name`, `host`, `port`, `status`, `info` (JSON)         |
+| `system_stats`    | Time-series metrics   | `system`, `stats` (JSON), `type` (1m/10m/20m/120m/480m) |
+| `system_details`  | Static system info    | `hostname`, `os`, `kernel`, `cpu`, `cores`, `memory`    |
+| `containers`      | Docker/Podman         | `name`, `image`, `cpu`, `memory`, `status`              |
+| `container_stats` | Container time-series | `system`, `stats` (JSON), `type`                        |
+| `alerts`          | User-defined alerts   | `system`, `name`, `value`, `triggered`                  |
+| `smart_devices`   | Disk health           | `system`, `name`, `model`, `state`, `capacity`          |
 
 ---
 
@@ -115,36 +116,36 @@ pb.collection('systems').subscribe('*', (data) => {
 ```typescript
 // Real-time system info (what's displayed on dashboard)
 interface SystemInfo {
-  h: string;     // hostname
-  cpu: number;   // CPU usage %
-  mp: number;    // Memory usage %
-  dp: number;    // Disk usage %
-  u: number;     // Uptime (seconds)
-  b: number;     // Bandwidth (MB)
-  bb?: number;   // Bandwidth (bytes)
-  t?: number;    // Threads
-  v: string;     // Agent version
-  g?: number;    // GPU usage %
-  dt?: number;   // Dashboard temperature
+  h: string; // hostname
+  cpu: number; // CPU usage %
+  mp: number; // Memory usage %
+  dp: number; // Disk usage %
+  u: number; // Uptime (seconds)
+  b: number; // Bandwidth (MB)
+  bb?: number; // Bandwidth (bytes)
+  t?: number; // Threads
+  v: string; // Agent version
+  g?: number; // GPU usage %
+  dt?: number; // Dashboard temperature
   la?: [number, number, number]; // Load average 1/5/15
-  bat?: [number, number];        // Battery [percent, state]
-  sv?: [number, number];         // Services [total, failed]
-  efs?: Record<string, number>;  // Extra filesystem %
+  bat?: [number, number]; // Battery [percent, state]
+  sv?: [number, number]; // Services [total, failed]
+  efs?: Record<string, number>; // Extra filesystem %
 }
 
 // Detailed stats (for charts)
 interface SystemStats {
-  cpu: number;    // CPU %
+  cpu: number; // CPU %
   cpub?: number[]; // [user, system, iowait, steal, idle]
-  m: number;      // Total memory (GB)
-  mu: number;     // Used memory (GB)
-  mp: number;     // Memory %
-  d: number;      // Disk total (GB)
-  du: number;     // Disk used (GB)
-  dp: number;     // Disk %
-  ns: number;     // Network sent (MB)
-  nr: number;     // Network recv (MB)
-  t?: Record<string, number>;  // Temperatures
+  m: number; // Total memory (GB)
+  mu: number; // Used memory (GB)
+  mp: number; // Memory %
+  d: number; // Disk total (GB)
+  du: number; // Disk used (GB)
+  dp: number; // Disk %
+  ns: number; // Network sent (MB)
+  nr: number; // Network recv (MB)
+  t?: Record<string, number>; // Temperatures
   g?: Record<string, GPUData>; // GPU data
   // ... more fields
 }
@@ -154,11 +155,11 @@ interface SystemStats {
 
 ```typescript
 interface PlacedDevice {
-  id: string;           // UUID
-  device_type: string;  // Reference to DeviceType.slug
-  position: number;     // Bottom U position (1-indexed)
+  id: string; // UUID
+  device_type: string; // Reference to DeviceType.slug
+  position: number; // Bottom U position (1-indexed)
   face: DeviceFace;
-  name?: string;        // Custom instance name
+  name?: string; // Custom instance name
   notes?: string;
   custom_fields?: Record<string, unknown>;
 }
@@ -172,16 +173,16 @@ interface PlacedDevice {
   // ... existing fields ...
 
   // Beszel integration (optional)
-  beszel_system_id?: string;     // Link to Beszel system record
-  beszel_hostname?: string;      // Cached hostname for display
+  beszel_system_id?: string; // Link to Beszel system record
+  beszel_hostname?: string; // Cached hostname for display
 }
 
 // Configuration store
 interface BeszelConfig {
-  hub_url?: string;              // Beszel hub URL
-  api_token?: string;            // PocketBase auth token
-  auto_match?: 'hostname' | 'name' | 'manual';
-  refresh_interval?: number;     // Polling interval (if not using WebSocket)
+  hub_url?: string; // Beszel hub URL
+  api_token?: string; // PocketBase auth token
+  auto_match?: "hostname" | "name" | "manual";
+  refresh_interval?: number; // Polling interval (if not using WebSocket)
 }
 ```
 
@@ -191,17 +192,17 @@ interface BeszelConfig {
 
 ### 4.1 Identification Fields
 
-| Beszel Field | Location | Example |
-|--------------|----------|---------|
-| `name` | systems.name | "proxmox-01" |
-| `host` | systems.host | "192.168.1.100" |
-| `hostname` | system_details.hostname | "pve-node1" |
+| Beszel Field | Location                | Example         |
+| ------------ | ----------------------- | --------------- |
+| `name`       | systems.name            | "proxmox-01"    |
+| `host`       | systems.host            | "192.168.1.100" |
+| `hostname`   | system_details.hostname | "pve-node1"     |
 
-| Rackula Field | Location | Example |
-|---------------|----------|---------|
-| `name` | PlacedDevice.name | "Proxmox Node 1" |
-| `hostname` | PlacedDevice.custom_fields?.hostname | "pve-node1" |
-| `ip_address` | PlacedDevice.custom_fields?.ip_address | "192.168.1.100" |
+| Rackula Field | Location                               | Example          |
+| ------------- | -------------------------------------- | ---------------- |
+| `name`        | PlacedDevice.name                      | "Proxmox Node 1" |
+| `hostname`    | PlacedDevice.custom_fields?.hostname   | "pve-node1"      |
+| `ip_address`  | PlacedDevice.custom_fields?.ip_address | "192.168.1.100"  |
 
 ### 4.2 Matching Options
 
@@ -210,15 +211,18 @@ interface BeszelConfig {
 User explicitly links Rackula devices to Beszel systems via UI picker.
 
 **Pros:**
+
 - No guesswork, always accurate
 - Works with any naming convention
 - Clear user intent
 
 **Cons:**
+
 - Requires manual setup per device
 - Extra work for large deployments
 
 **Implementation:**
+
 ```typescript
 // Device edit dialog: "Link to Monitoring"
 <BeszelSystemPicker
@@ -231,13 +235,17 @@ User explicitly links Rackula devices to Beszel systems via UI picker.
 Automatically match by hostname if devices have matching values.
 
 **Implementation:**
+
 ```typescript
-function findBeszelSystem(device: PlacedDevice, systems: BeszelSystem[]): string | null {
+function findBeszelSystem(
+  device: PlacedDevice,
+  systems: BeszelSystem[],
+): string | null {
   const deviceHostname = device.custom_fields?.hostname?.toLowerCase();
   if (!deviceHostname) return null;
 
-  const match = systems.find(s =>
-    s.expand?.system_details?.hostname?.toLowerCase() === deviceHostname
+  const match = systems.find(
+    (s) => s.expand?.system_details?.hostname?.toLowerCase() === deviceHostname,
   );
   return match?.id ?? null;
 }
@@ -254,6 +262,7 @@ Match by similar names (e.g., "Dell R650" matches Beszel system "dell-r650").
 ### 4.3 Recommendation
 
 **Start with manual mapping** (Option A) for the MVP. It's:
+
 - Most reliable
 - Simplest to implement
 - Gives users control
@@ -276,9 +285,10 @@ Rackula fetches data directly from Beszel's PocketBase API.
 ```
 
 **Implementation:**
+
 ```typescript
 // src/lib/services/beszel.ts
-import PocketBase from 'pocketbase';
+import PocketBase from "pocketbase";
 
 class BeszelService {
   private pb: PocketBase;
@@ -288,33 +298,34 @@ class BeszelService {
   }
 
   async authenticate(email: string, password: string) {
-    return this.pb.collection('users').authWithPassword(email, password);
+    return this.pb.collection("users").authWithPassword(email, password);
   }
 
   async getSystems() {
-    return this.pb.collection('systems').getFullList();
+    return this.pb.collection("systems").getFullList();
   }
 
   async getSystemStats(systemId: string) {
-    return this.pb.collection('system_stats').getFirstListItem(
-      `system="${systemId}"`,
-      { sort: '-created' }
-    );
+    return this.pb
+      .collection("system_stats")
+      .getFirstListItem(`system="${systemId}"`, { sort: "-created" });
   }
 
   subscribeToSystem(systemId: string, callback: (data: SystemInfo) => void) {
-    return this.pb.collection('systems').subscribe(systemId, callback);
+    return this.pb.collection("systems").subscribe(systemId, callback);
   }
 }
 ```
 
 **Pros:**
+
 - No backend changes to Beszel
 - Real-time subscriptions built-in
 - Full API access
 - PocketBase SDK handles auth, caching
 
 **Cons:**
+
 - CORS configuration required
 - Auth credentials stored in browser
 - Both apps must be accessible
@@ -331,11 +342,13 @@ Add a backend to Rackula that proxies Beszel requests.
 ```
 
 **Pros:**
+
 - No CORS issues
 - Centralized auth (store Beszel token server-side)
 - Can cache/transform data
 
 **Cons:**
+
 - Requires building a backend (major scope increase)
 - Adds deployment complexity
 - Against Rackula's "no backend" principle
@@ -347,10 +360,12 @@ Add a backend to Rackula that proxies Beszel requests.
 Use iframes or web components to embed Beszel's system pages.
 
 **Pros:**
+
 - Zero API integration
 - Full Beszel experience
 
 **Cons:**
+
 - Awkward UX (nested scrolling, style conflicts)
 - Auth complexity (two login flows)
 - Limited customization
@@ -362,6 +377,7 @@ Use iframes or web components to embed Beszel's system pages.
 Simply link from Rackula devices to their Beszel system pages.
 
 **Implementation:**
+
 ```svelte
 {#if device.beszel_system_id}
   <a href="{beszelUrl}/system/{device.beszel_system_id}" target="_blank">
@@ -371,10 +387,12 @@ Simply link from Rackula devices to their Beszel system pages.
 ```
 
 **Pros:**
+
 - Trivial to implement
 - No API integration needed
 
 **Cons:**
+
 - Context switch required
 - No inline metrics in Rackula
 
@@ -389,6 +407,7 @@ Simply link from Rackula devices to their Beszel system pages.
 **Goal:** Display basic system status on Rackula devices
 
 **Features:**
+
 - Configure Beszel hub URL
 - Manual device-to-system linking
 - Display status badge (up/down/paused)
@@ -396,6 +415,7 @@ Simply link from Rackula devices to their Beszel system pages.
 - Deep link to Beszel system page
 
 **Technical Approach:**
+
 1. Add `beszel_system_id` to PlacedDevice custom_fields
 2. Create `BeszelService` class with PocketBase SDK
 3. Fetch system info on layout load
@@ -403,6 +423,7 @@ Simply link from Rackula devices to their Beszel system pages.
 5. Display in device tooltip/info panel
 
 **UI Mockup:**
+
 ```
 ┌─────────────────────────────────────────────┐
 │  Dell R650xs                            🟢  │
@@ -418,12 +439,14 @@ Simply link from Rackula devices to their Beszel system pages.
 **Goal:** Live metrics without page refresh
 
 **Features:**
+
 - WebSocket subscription to linked systems
 - Real-time status badge updates
 - Animated metric changes
 - Alert status indicators
 
 **Technical Approach:**
+
 ```typescript
 // Subscribe to all linked systems
 const linkedSystemIds = getLinkedSystemIds(layout);
@@ -439,6 +462,7 @@ for (const id of linkedSystemIds) {
 **Goal:** Full monitoring dashboard view
 
 **Features:**
+
 - Dedicated dashboard view mode
 - Historical charts for selected devices
 - Container status display
@@ -462,6 +486,7 @@ Access-Control-Allow-Credentials: true
 ### 7.2 Authentication
 
 Options:
+
 1. **User provides Beszel credentials** - Rackula authenticates on behalf of user
 2. **API token** - Generate long-lived token in Beszel, paste into Rackula
 3. **OAuth** - If same OAuth provider, could share session

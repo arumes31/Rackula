@@ -16,8 +16,12 @@
   } from "$lib/stores/canvas.svelte";
   import { getUIStore } from "$lib/stores/ui.svelte";
   import { debug } from "$lib/utils/debug";
+  import { getPlacementStore } from "$lib/stores/placement.svelte";
+  // Note: getViewportStore removed - was only used for PlacementIndicator condition
+  import { hapticSuccess } from "$lib/utils/haptics";
   import RackDualView from "./RackDualView.svelte";
   import WelcomeScreen from "./WelcomeScreen.svelte";
+  // Note: PlacementIndicator removed - placement UI now integrated into Rack.svelte
 
   // Synthetic rack ID for single-rack mode
   const RACK_ID = "rack-0";
@@ -70,6 +74,31 @@
   const selectionStore = getSelectionStore();
   const canvasStore = getCanvasStore();
   const uiStore = getUIStore();
+  // Note: viewportStore removed - was only used for PlacementIndicator condition
+  const placementStore = getPlacementStore();
+
+  // Note: handlePlacementCancel removed - now handled in Rack.svelte
+
+  // Handle mobile tap-to-place
+  function handlePlacementTap(
+    event: CustomEvent<{ position: number; face: "front" | "rear" }>,
+  ) {
+    const device = placementStore.pendingDevice;
+    if (!device) return;
+
+    const { position, face } = event.detail;
+    const success = layoutStore.placeDevice(
+      RACK_ID,
+      device.slug,
+      position,
+      face,
+    );
+
+    if (success) {
+      hapticSuccess();
+      placementStore.completePlacement();
+    }
+  }
 
   // Single-rack mode: direct access to rack
   const rack = $derived(layoutStore.rack);
@@ -269,6 +298,8 @@
   onclick={handleCanvasClick}
   onkeydown={handleCanvasKeydown}
 >
+  <!-- Note: Mobile placement indicator now integrated into Rack.svelte -->
+
   <!-- Hidden description for screen readers -->
   {#if deviceListDescription}
     <p id="canvas-device-list" class="sr-only">{deviceListDescription}</p>
@@ -294,6 +325,7 @@
           ondevicedrop={(e) => handleDeviceDrop(e)}
           ondevicemove={(e) => handleDeviceMove(e)}
           ondevicemoverack={(e) => handleDeviceMoveRack(e)}
+          onplacementtap={(e) => handlePlacementTap(e)}
         />
       </div>
     </div>
