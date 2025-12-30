@@ -304,6 +304,358 @@ function applyIsometricTransform(svg: SVGElement, isIsometric: boolean): void {
 
 ---
 
+## Implementation Details & Edge Cases
+
+### A. SVG Transform Mathematics
+
+**Isometric projection matrix:**
+
+```
+True isometric: 30° angles from horizontal
+- cos(30°) = 0.866025...
+- sin(30°) = 0.5
+
+SVG matrix(a, b, c, d, e, f) maps to:
+  x' = a*x + c*y + e
+  y' = b*x + d*y + f
+
+For isometric: matrix(cos30, sin30, -cos30, sin30, tx, ty)
+```
+
+**ViewBox calculation after transform:**
+
+```
+Original dimensions: W × H
+After isometric transform:
+  New width  = W * cos30 + H * cos30 = (W + H) * 0.866
+  New height = W * sin30 + H * sin30 = (W + H) * 0.5
+
+Example: 220px × 968px rack (42U)
+  Transformed width  = (220 + 968) * 0.866 ≈ 1029px
+  Transformed height = (220 + 968) * 0.5   = 594px
+```
+
+**Transform origin:**
+
+- SVG transforms apply from (0,0) by default
+- Must translate content AFTER transform to position correctly
+- Or wrap in group with pre-translation
+
+**Decision needed:** Use true isometric (30°) or slightly adjusted angle for aesthetics?
+
+---
+
+### B. Device Depth Visualization
+
+**Full-depth devices (is_full_depth: true or undefined):**
+
+- Render front face (current rectangle)
+- Add right-side panel to show depth
+- Side panel width: ~20px in isometric space (representing ~24" physical depth)
+
+**Half-depth devices (is_full_depth: false):**
+
+- Same front face
+- Side panel width: ~10px (half the depth)
+- Visually distinguishes from full-depth
+
+**Side panel rendering:**
+
+```svg
+<!-- Device front face (existing) -->
+<rect x="..." y="..." width="186" height="44" fill="#3498db"/>
+
+<!-- Device side panel (new for isometric) -->
+<polygon points="x1,y1 x2,y2 x3,y3 x4,y4" fill="#2980b9"/>
+```
+
+**Side panel color:**
+
+- Darken device color by 20-25%
+- Use HSL manipulation: reduce lightness by 20%
+- Or multiply RGB by 0.8
+
+**Decision needed:** Exact depth pixels? (suggests: full=20px, half=10px)
+
+---
+
+### C. Device Labels in Isometric
+
+**Problem:** Text becomes skewed and hard to read in isometric projection.
+
+**Options:**
+
+1. **Omit labels in isometric** - Cleanest, rely on legend
+2. **Counter-rotate labels** - Apply inverse transform to text only
+3. **Callout lines** - Flat labels with lines pointing to devices
+
+**Recommendation:** Option 1 (omit) for MVP, add callouts in polish phase if requested.
+
+**Device images:**
+
+- Currently rendered on device front faces
+- In isometric: images would be skewed/distorted
+- **Recommendation:** Fall back to category icons in isometric mode (simpler, consistent)
+
+---
+
+### D. Rack Frame 3D Representation
+
+**Current flat rendering:**
+
+- Rectangle for rail on each side
+- Horizontal bars top and bottom
+- Interior background color
+
+**Isometric enhancement:**
+
+- Render rack as 3D "box frame"
+- Show: front rails, top bar, right side depth
+- Creates visual context for devices
+
+**Rack frame components:**
+
+```
+┌─────────────────────┐ ← Top bar (front edge)
+│  ╱─────────────────╱│
+│ ╱                 ╱ │ ← Top surface (subtle)
+│╱_________________╱  │
+│█               █│   │ ← Left rail │ Interior │ Right rail
+│█               █│  ╱
+│█               █│ ╱  ← Right side depth
+│█_______________█│╱
+└─────────────────────┘ ← Bottom bar
+```
+
+**Color scheme for frame:**
+
+- Front rails: current rail color
+- Top surface: slightly lighter
+- Right side: slightly darker
+- Floor shadow: subtle gray gradient below rack
+
+**Decision needed:** How much visual complexity? (suggests: start simple, add top surface in polish)
+
+---
+
+### E. Dual-View Layout
+
+**Front + Rear side-by-side:**
+
+```
+┌──────────────┐  GAP  ┌──────────────┐
+│   FRONT      │  ←→   │    REAR      │
+│   (depth     │       │   (depth     │
+│   extends    │       │   extends    │
+│   RIGHT)     │       │   LEFT)      │
+└──────────────┘       └──────────────┘
+```
+
+**Key considerations:**
+
+- Front view: devices' depth extends to the RIGHT
+- Rear view: devices' depth extends to the LEFT (mirrored)
+- Gap between views: increase from 40px to ~60px to prevent overlap
+- Both racks share same legend below
+
+**Alternative layout:** Staggered (rear offset above-right of front)
+
+- More compact but potentially confusing
+- **Recommendation:** Keep side-by-side for consistency with flat export
+
+---
+
+### F. Half-Depth Device Special Cases
+
+**Mounted face visualization:**
+
+- Front-mounted device in front view: full visibility, normal depth
+- Rear-mounted device in front view: show as "phantom" (reduced opacity) or hidden?
+
+**Blocked slots:**
+
+- When half-depth device on one face blocks placement on other face
+- Current flat export: diagonal stripes
+- Isometric: could show blocked area as crosshatched depth region
+
+**Decision needed:** Show rear-mounted devices in front view? (suggests: no, keep clean)
+
+---
+
+### G. Export Format Considerations
+
+**PNG/JPEG:**
+
+- SVG transforms rasterize correctly to canvas
+- Consider higher default resolution (2x) for isometric due to diagonal aliasing
+- May need anti-aliasing hints
+
+**PDF:**
+
+- SVG embedded in jsPDF preserves transforms
+- Page orientation: landscape likely better for wide isometric layout
+- Test page size calculations with transformed dimensions
+
+**SVG export:**
+
+- Transform matrix preserved in output
+- Compatible with all modern tools (Figma, Illustrator, browsers)
+- File size similar to flat (no bitmap data)
+
+**Filename convention:**
+
+- Append `-isometric` to export filename
+- e.g., `my-rack-2025-12-30-isometric.png`
+
+---
+
+### H. Edge Cases Checklist
+
+| Scenario                  | Consideration                          | Resolution                                                 |
+| ------------------------- | -------------------------------------- | ---------------------------------------------------------- |
+| **Empty rack**            | Rack frame only, no devices            | Should still render 3D frame correctly                     |
+| **Single 1U device**      | Very small visual                      | Renders fine, legend provides context                      |
+| **42U fully populated**   | Many overlapping side panels           | Depth sorting ensures correct overlap                      |
+| **0.5U device**           | Very thin (11px height)                | May need minimum visual height for side panel              |
+| **Custom devices**        | No images, only colors                 | Works same as library devices (color rectangle)            |
+| **Device images**         | Would be distorted                     | Fall back to category icons in isometric mode              |
+| **10" rack**              | Narrower (116px)                       | Isometric proportions scale down correctly                 |
+| **Mixed half/full depth** | Adjacent devices with different depths | Each device renders its own depth independently            |
+| **Device at U1**          | Bottom of rack                         | Side panel may extend below rack frame—clip to rack bounds |
+| **Device at U42**         | Top of rack                            | Side panel must not exceed top bar                         |
+
+---
+
+### I. UI/UX Specifications
+
+**Export panel additions:**
+
+```
+View Style
+○ Flat (current)
+● Isometric
+
+[existing export options...]
+```
+
+- Radio buttons or toggle switch
+- Default: Flat (preserve existing behavior)
+- Remember preference in localStorage? (suggest: yes)
+
+**Preview:**
+
+- No live preview in export panel (too complex)
+- User clicks "Export" and sees result
+- Could add small static icon showing flat vs isometric
+
+---
+
+### J. Performance Considerations
+
+**SVG complexity increase:**
+
+- Each device adds 1 additional polygon (side panel)
+- 42 devices → 42 extra shapes
+- Negligible impact on modern devices
+
+**Canvas conversion:**
+
+- Larger viewBox dimensions due to isometric projection
+- ~1.7x larger canvas area
+- May need to cap maximum resolution for very large exports
+
+**Batch rendering:**
+
+- Export is one-shot operation
+- No real-time rendering concerns
+- Memory usage scales with device count (acceptable)
+
+---
+
+### K. Testing Strategy
+
+**Unit tests:**
+
+- [ ] Isometric transform matrix calculation
+- [ ] ViewBox dimension calculation for various rack sizes
+- [ ] Side panel color darkening algorithm
+- [ ] Depth sorting logic (higher U = rendered first)
+
+**Integration tests:**
+
+- [ ] Export generates valid SVG with transform attribute
+- [ ] PNG export produces correct dimensions
+- [ ] PDF export fits on page with correct orientation
+
+**Visual regression tests:**
+
+- [ ] Create golden images for reference configurations:
+  - Empty 12U rack
+  - 42U with mixed devices
+  - Dual-view front+rear
+  - Half-depth device at various positions
+- [ ] Compare against snapshots after code changes
+
+**Manual testing checklist:**
+
+- [ ] All export formats (PNG, JPEG, PDF, SVG)
+- [ ] Both themes (light/dark background)
+- [ ] 10" and 19" rack widths
+- [ ] Device library items with images
+- [ ] Custom user-created devices
+- [ ] QR code positioning in isometric
+- [ ] Legend readability
+
+---
+
+### L. Refined Implementation Phases
+
+**Phase 1: MVP Isometric Export (2 days)**
+
+1. Add "Isometric" toggle to ExportPanel component
+2. Create `applyIsometricTransform()` in export.ts
+3. Calculate new viewBox for transformed SVG
+4. Apply matrix transform to rack content group
+5. Adjust legend positioning (below, flat)
+6. Add device side panels (simple darker rectangle)
+7. Implement depth sorting (reverse U order)
+8. Test all export formats
+
+**Phase 2: Visual Polish (1 day)**
+
+1. Rack frame depth (top surface, right side)
+2. Drop shadow under rack
+3. Refine side panel proportions
+4. Half-depth device visual distinction
+5. Filename suffix for isometric exports
+
+**Phase 3: Edge Cases & Testing (1 day)**
+
+1. Handle 0.5U device minimum visibility
+2. Clip side panels to rack bounds
+3. Dual-view gap adjustment
+4. Write comprehensive tests
+5. Visual regression snapshots
+
+**Phase 4: Optional Enhancements (if needed)**
+
+- Device callout labels
+- Floor/ground plane
+- Alternative projection angles (cavalier, dimetric)
+- Export resolution multiplier option
+
+---
+
+### M. Open Technical Questions
+
+1. **Exact transform values:** True isometric (30°) or adjusted for rack proportions?
+2. **Side panel pixel depth:** 20px full, 10px half—or proportional to rack width?
+3. **Transform application point:** Before or after legend generation?
+4. **QR code positioning:** Keep in corner, or move to avoid overlap with isometric rack?
+5. **Airflow indicators:** Skip in isometric, or attempt to render arrows?
+
+---
+
 ## References
 
 - [Envato Tuts+ - Isometric Layout with CSS 3D](https://webdesign.tutsplus.com/create-an-isometric-layout-with-3d-transforms--cms-27134t)
