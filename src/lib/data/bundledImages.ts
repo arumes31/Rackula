@@ -897,11 +897,16 @@ import tpLinkTlSg105Rear from '$lib/assets/device-images/tp-link/tp-link-tl-sg10
 import tpLinkTlSg105eFront from '$lib/assets/device-images/tp-link/tp-link-tl-sg105e.front.webp';
 
 // UBIQUITI images
+import ubiquitiBrushPanel1uFront from '$lib/assets/device-images/ubiquiti/ubiquiti-brush-panel-1u.front.webp';
 import ubiquitiCkg2RmFront from '$lib/assets/device-images/ubiquiti/ubiquiti-ckg2-rm.front.webp';
 import ubiquitiCkg2RmRear from '$lib/assets/device-images/ubiquiti/ubiquiti-ckg2-rm.rear.webp';
 import ubiquitiE7Front from '$lib/assets/device-images/ubiquiti/ubiquiti-e7.front.webp';
 import ubiquitiE7AudienceUsFront from '$lib/assets/device-images/ubiquiti/ubiquiti-e7-audience-us.front.webp';
 import ubiquitiE7CampusUsFront from '$lib/assets/device-images/ubiquiti/ubiquiti-e7-campus-us.front.webp';
+import ubiquitiEcs24PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-ecs-24-poe.front.webp';
+import ubiquitiEcs24sPoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-ecs-24s-poe.front.webp';
+import ubiquitiEcs48PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-ecs-48-poe.front.webp';
+import ubiquitiEcs48sPoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-ecs-48s-poe.front.webp';
 import ubiquitiEnterpriseCampusAggregationFront from '$lib/assets/device-images/ubiquiti/ubiquiti-enterprise-campus-aggregation.front.webp';
 import ubiquitiEnterpriseCampusAggregationRear from '$lib/assets/device-images/ubiquiti/ubiquiti-enterprise-campus-aggregation.rear.webp';
 import ubiquitiEnterpriseCampusSwitch24PortPoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-enterprise-campus-switch-24-port-poe.front.webp';
@@ -920,6 +925,8 @@ import ubiquitiUaccAiPortRmFront from '$lib/assets/device-images/ubiquiti/ubiqui
 import ubiquitiUaccAiPortRmRear from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-ai-port-rm.rear.webp';
 import ubiquitiUaccPoePlusPlus10gFront from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-poe-plus-plus-10g.front.webp';
 import ubiquitiUaccPoePlusPlus10gRear from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-poe-plus-plus-10g.rear.webp';
+import ubiquitiUaccRackPanelBlank1uFront from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-rack-panel-blank-1u.front.webp';
+import ubiquitiUaccRackPanelBlank2uFront from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-rack-panel-blank-2u.front.webp';
 import ubiquitiUaccRackPanelPatchBlank24Front from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-rack-panel-patch-blank-24.front.webp';
 import ubiquitiUaccRackPanelPatchBlank24Rear from '$lib/assets/device-images/ubiquiti/ubiquiti-uacc-rack-panel-patch-blank-24.rear.webp';
 import ubiquitiUnasProFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unas-pro.front.webp';
@@ -943,11 +950,14 @@ import ubiquitiUnifiSmartpowerRpsFront from '$lib/assets/device-images/ubiquiti/
 import ubiquitiUnifiSmartpowerRpsRear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-smartpower-rps.rear.webp';
 import ubiquitiUnifiSwitch16PoeGen2Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-16-poe-gen2.front.webp';
 import ubiquitiUnifiSwitch16XgFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-16-xg.front.webp';
+import ubiquitiUnifiSwitch24Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24.front.webp';
+import ubiquitiUnifiSwitch24PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24-poe.front.webp';
 import ubiquitiUnifiSwitch24ProFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24-pro.front.webp';
 import ubiquitiUnifiSwitch24ProRear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24-pro.rear.webp';
 import ubiquitiUnifiSwitch24ProPoeGen2Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24-pro-poe-gen2.front.webp';
 import ubiquitiUnifiSwitch24ProPoeGen2Rear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-24-pro-poe-gen2.rear.webp';
 import ubiquitiUnifiSwitch48Gen1Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-48-gen1.front.webp';
+import ubiquitiUnifiSwitch48PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-48-poe.front.webp';
 import ubiquitiUnifiSwitch48ProFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-48-pro.front.webp';
 import ubiquitiUnifiSwitch48ProRear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-48-pro.rear.webp';
 import ubiquitiUnifiSwitch48ProPoeGen2Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-48-pro-poe-gen2.front.webp';
@@ -961,6 +971,8 @@ import ubiquitiUnifiSwitchLite8PoeFront from '$lib/assets/device-images/ubiquiti
 import ubiquitiUnifiSwitchLite8PoeRear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-lite-8-poe.rear.webp';
 import ubiquitiUnifiSwitchProAggregationFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-aggregation.front.webp';
 import ubiquitiUnifiSwitchProAggregationRear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-aggregation.rear.webp';
+import ubiquitiUnifiSwitchProMax16Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-max-16.front.webp';
+import ubiquitiUnifiSwitchProMax16PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-max-16-poe.front.webp';
 import ubiquitiUnifiSwitchProMax24Front from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-max-24.front.webp';
 import ubiquitiUnifiSwitchProMax24Rear from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-max-24.rear.webp';
 import ubiquitiUnifiSwitchProMax24PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-unifi-switch-pro-max-24-poe.front.webp';
@@ -983,6 +995,16 @@ import ubiquitiUspPduHdFront from '$lib/assets/device-images/ubiquiti/ubiquiti-u
 import ubiquitiUspPduHdRear from '$lib/assets/device-images/ubiquiti/ubiquiti-usp-pdu-hd.rear.webp';
 import ubiquitiUspPduProFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usp-pdu-pro.front.webp';
 import ubiquitiUspPduProRear from '$lib/assets/device-images/ubiquiti/ubiquiti-usp-pdu-pro.rear.webp';
+import ubiquitiUswMissionCriticalFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-mission-critical.front.webp';
+import ubiquitiUswProHd24Front from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-hd-24.front.webp';
+import ubiquitiUswProHd24PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-hd-24-poe.front.webp';
+import ubiquitiUswProXg10PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-xg-10-poe.front.webp';
+import ubiquitiUswProXg24PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-xg-24-poe.front.webp';
+import ubiquitiUswProXg48Front from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-xg-48.front.webp';
+import ubiquitiUswProXg48PoeFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-xg-48-poe.front.webp';
+import ubiquitiUswProXgAggregationFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-pro-xg-aggregation.front.webp';
+import ubiquitiUswWanFront from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-wan.front.webp';
+import ubiquitiUswWanRj45Front from '$lib/assets/device-images/ubiquiti/ubiquiti-usw-wan-rj45.front.webp';
 
 /**
  * Bundled image data structure
@@ -1545,10 +1567,15 @@ const BUNDLED_IMAGES: Record<string, BundledImageSet> = {
 	'tp-link-tl-sg105e': { front: tpLinkTlSg105eFront },
 
 	// UBIQUITI
+	'ubiquiti-brush-panel-1u': { front: ubiquitiBrushPanel1uFront },
 	'ubiquiti-ckg2-rm': { front: ubiquitiCkg2RmFront, rear: ubiquitiCkg2RmRear },
 	'ubiquiti-e7': { front: ubiquitiE7Front },
 	'ubiquiti-e7-audience-us': { front: ubiquitiE7AudienceUsFront },
 	'ubiquiti-e7-campus-us': { front: ubiquitiE7CampusUsFront },
+	'ubiquiti-ecs-24-poe': { front: ubiquitiEcs24PoeFront },
+	'ubiquiti-ecs-24s-poe': { front: ubiquitiEcs24sPoeFront },
+	'ubiquiti-ecs-48-poe': { front: ubiquitiEcs48PoeFront },
+	'ubiquiti-ecs-48s-poe': { front: ubiquitiEcs48sPoeFront },
 	'ubiquiti-enterprise-campus-aggregation': { front: ubiquitiEnterpriseCampusAggregationFront, rear: ubiquitiEnterpriseCampusAggregationRear },
 	'ubiquiti-enterprise-campus-switch-24-port-poe': { front: ubiquitiEnterpriseCampusSwitch24PortPoeFront, rear: ubiquitiEnterpriseCampusSwitch24PortPoeRear },
 	'ubiquiti-enterprise-fortress-gateway': { front: ubiquitiEnterpriseFortressGatewayFront, rear: ubiquitiEnterpriseFortressGatewayRear },
@@ -1559,6 +1586,8 @@ const BUNDLED_IMAGES: Record<string, BundledImageSet> = {
 	'ubiquiti-u7-pro-xgs': { front: ubiquitiU7ProXgsFront, rear: ubiquitiU7ProXgsRear },
 	'ubiquiti-uacc-ai-port-rm': { front: ubiquitiUaccAiPortRmFront, rear: ubiquitiUaccAiPortRmRear },
 	'ubiquiti-uacc-poe-plus-plus-10g': { front: ubiquitiUaccPoePlusPlus10gFront, rear: ubiquitiUaccPoePlusPlus10gRear },
+	'ubiquiti-uacc-rack-panel-blank-1u': { front: ubiquitiUaccRackPanelBlank1uFront },
+	'ubiquiti-uacc-rack-panel-blank-2u': { front: ubiquitiUaccRackPanelBlank2uFront },
 	'ubiquiti-uacc-rack-panel-patch-blank-24': { front: ubiquitiUaccRackPanelPatchBlank24Front, rear: ubiquitiUaccRackPanelPatchBlank24Rear },
 	'ubiquiti-unas-pro': { front: ubiquitiUnasProFront, rear: ubiquitiUnasProRear },
 	'ubiquiti-unifi-cloud-gateway-ultra': { front: ubiquitiUnifiCloudGatewayUltraFront, rear: ubiquitiUnifiCloudGatewayUltraRear },
@@ -1572,9 +1601,12 @@ const BUNDLED_IMAGES: Record<string, BundledImageSet> = {
 	'ubiquiti-unifi-smartpower-rps': { front: ubiquitiUnifiSmartpowerRpsFront, rear: ubiquitiUnifiSmartpowerRpsRear },
 	'ubiquiti-unifi-switch-16-poe-gen2': { front: ubiquitiUnifiSwitch16PoeGen2Front },
 	'ubiquiti-unifi-switch-16-xg': { front: ubiquitiUnifiSwitch16XgFront },
+	'ubiquiti-unifi-switch-24': { front: ubiquitiUnifiSwitch24Front },
+	'ubiquiti-unifi-switch-24-poe': { front: ubiquitiUnifiSwitch24PoeFront },
 	'ubiquiti-unifi-switch-24-pro': { front: ubiquitiUnifiSwitch24ProFront, rear: ubiquitiUnifiSwitch24ProRear },
 	'ubiquiti-unifi-switch-24-pro-poe-gen2': { front: ubiquitiUnifiSwitch24ProPoeGen2Front, rear: ubiquitiUnifiSwitch24ProPoeGen2Rear },
 	'ubiquiti-unifi-switch-48-gen1': { front: ubiquitiUnifiSwitch48Gen1Front },
+	'ubiquiti-unifi-switch-48-poe': { front: ubiquitiUnifiSwitch48PoeFront },
 	'ubiquiti-unifi-switch-48-pro': { front: ubiquitiUnifiSwitch48ProFront, rear: ubiquitiUnifiSwitch48ProRear },
 	'ubiquiti-unifi-switch-48-pro-poe-gen2': { front: ubiquitiUnifiSwitch48ProPoeGen2Front, rear: ubiquitiUnifiSwitch48ProPoeGen2Rear },
 	'ubiquiti-unifi-switch-aggregation': { front: ubiquitiUnifiSwitchAggregationFront },
@@ -1582,6 +1614,8 @@ const BUNDLED_IMAGES: Record<string, BundledImageSet> = {
 	'ubiquiti-unifi-switch-enterprise-48-poe': { front: ubiquitiUnifiSwitchEnterprise48PoeFront, rear: ubiquitiUnifiSwitchEnterprise48PoeRear },
 	'ubiquiti-unifi-switch-lite-8-poe': { front: ubiquitiUnifiSwitchLite8PoeFront, rear: ubiquitiUnifiSwitchLite8PoeRear },
 	'ubiquiti-unifi-switch-pro-aggregation': { front: ubiquitiUnifiSwitchProAggregationFront, rear: ubiquitiUnifiSwitchProAggregationRear },
+	'ubiquiti-unifi-switch-pro-max-16': { front: ubiquitiUnifiSwitchProMax16Front },
+	'ubiquiti-unifi-switch-pro-max-16-poe': { front: ubiquitiUnifiSwitchProMax16PoeFront },
 	'ubiquiti-unifi-switch-pro-max-24': { front: ubiquitiUnifiSwitchProMax24Front, rear: ubiquitiUnifiSwitchProMax24Rear },
 	'ubiquiti-unifi-switch-pro-max-24-poe': { front: ubiquitiUnifiSwitchProMax24PoeFront, rear: ubiquitiUnifiSwitchProMax24PoeRear },
 	'ubiquiti-unifi-switch-pro-max-48': { front: ubiquitiUnifiSwitchProMax48Front, rear: ubiquitiUnifiSwitchProMax48Rear },
@@ -1592,7 +1626,17 @@ const BUNDLED_IMAGES: Record<string, BundledImageSet> = {
 	'ubiquiti-unifi-wan-switch-rj45': { front: ubiquitiUnifiWanSwitchRj45Front, rear: ubiquitiUnifiWanSwitchRj45Rear },
 	'ubiquiti-up-ai-port': { front: ubiquitiUpAiPortFront, rear: ubiquitiUpAiPortRear },
 	'ubiquiti-usp-pdu-hd': { front: ubiquitiUspPduHdFront, rear: ubiquitiUspPduHdRear },
-	'ubiquiti-usp-pdu-pro': { front: ubiquitiUspPduProFront, rear: ubiquitiUspPduProRear }
+	'ubiquiti-usp-pdu-pro': { front: ubiquitiUspPduProFront, rear: ubiquitiUspPduProRear },
+	'ubiquiti-usw-mission-critical': { front: ubiquitiUswMissionCriticalFront },
+	'ubiquiti-usw-pro-hd-24': { front: ubiquitiUswProHd24Front },
+	'ubiquiti-usw-pro-hd-24-poe': { front: ubiquitiUswProHd24PoeFront },
+	'ubiquiti-usw-pro-xg-10-poe': { front: ubiquitiUswProXg10PoeFront },
+	'ubiquiti-usw-pro-xg-24-poe': { front: ubiquitiUswProXg24PoeFront },
+	'ubiquiti-usw-pro-xg-48': { front: ubiquitiUswProXg48Front },
+	'ubiquiti-usw-pro-xg-48-poe': { front: ubiquitiUswProXg48PoeFront },
+	'ubiquiti-usw-pro-xg-aggregation': { front: ubiquitiUswProXgAggregationFront },
+	'ubiquiti-usw-wan': { front: ubiquitiUswWanFront },
+	'ubiquiti-usw-wan-rj45': { front: ubiquitiUswWanRj45Front }
 };
 
 /**
