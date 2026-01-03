@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.12] - 2026-01-03
+
+### Added
+
+- PlacedPort schema and port instantiation for connection infrastructure (#363, PR #389)
+- MVP Connection model with port-based references (#365, PR #392)
+
+### Fixed
+
+- Docker images now build for both amd64 and arm64 architectures (#390, PR #391)
+
 ## [0.6.11] - 2026-01-02
 
 ### Fixed
