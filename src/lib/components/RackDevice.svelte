@@ -213,6 +213,7 @@
     if (target.closest(".port-indicators")) return;
 
     event.stopPropagation();
+    event.preventDefault(); // Prevent Safari text selection during drag
 
     // Record starting position for click vs drag detection
     pointerStartPos = { x: event.clientX, y: event.clientY };
