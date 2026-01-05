@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.14] - 2026-01-04
+
+## Added
+
+#251: feat: port tooltips on hover
+#146: Support half-width devices in full width rack
+#403: feat: Add IP Address field to Device Edit Panel
+
+### Fixed
+
+#415: Docker container never marked as healthy - thanks to @HellsCrimson for reporting!
+#411: Safari 18.x: Device positioning broken - grab handles stacked at top of rack - thanks to @@brandonb927 for reporting
+#393: drag and dropping not working on Safari/Mac
+
+### Technical
+
+#399: chore: Address CodeRabbit feedback from #398 (Safari pointer events fix)
+#400: fix: Refactor PortIndicators to use SVG-native pointer events (Safari compatibility)
+#406: chore: consolidate brand pack tests into single parameterized file
+#407: chore: remove redundant schema validation tests
+#408: chore: audit and reduce high-volume test files
+#409: chore: add high-value tests for under-tested areas
+#418: chore: remove unused face option from createTestDevice helper in collision tests
+
 ## [0.6.13] - 2026-01-03
 
 ### Fixed
