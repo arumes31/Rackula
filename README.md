@@ -33,7 +33,7 @@ Plan your rack layout. Drag your devices in, move them around, export it. It run
 
 ## Get Started
 
-### **Use it right now:** [app.racku.la](https://app.racku.la)
+### **Use it right now:** [count.racku.la](https://count.racku.la)
 
 ### Selfhost with Docker
 
