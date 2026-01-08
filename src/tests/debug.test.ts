@@ -66,20 +66,6 @@ describe("Debug Logging", () => {
       const call = consoleSpy.mock.calls[0];
       expect(call?.[0]).toMatch(/^\[Rackula:device:move\]/);
     });
-
-    it("debug.collision() outputs [Rackula:collision] prefix", () => {
-      debug.collision({
-        position: 1,
-        height: 2,
-        face: "both",
-        isFullDepth: true,
-        existingDevices: [],
-        result: "clear",
-      });
-      expect(consoleSpy).toHaveBeenCalled();
-      const call = consoleSpy.mock.calls[0];
-      expect(call?.[0]).toMatch(/^\[Rackula:collision\]/);
-    });
   });
 
   describe("Warn and Error Logging", () => {

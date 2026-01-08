@@ -1417,17 +1417,7 @@ Logged when `moveDeviceRecorded()` is called:
   result: {success|collision|out_of_bounds}
 ```
 
-### 18.5 Collision Logs
-
-Logged when collision detection runs:
-
-```
-[Rackula:collision] checking pos={position} height={height} face={face} isFullDepth={isFullDepth}
-  existing devices: [{pos, height, face}...]
-  result: {clear|blocked by device at U{position}}
-```
-
-### 18.6 Implementation
+### 18.5 Implementation
 
 Debug logging uses a centralized logger utility:
 
@@ -1457,7 +1447,7 @@ export const debug = {
 };
 ```
 
-### 18.7 Enabling/Disabling
+### 18.6 Enabling/Disabling
 
 - **Development mode**: Logs automatically enabled via `import.meta.env.DEV`
 - **Production mode**: Logs stripped at build time (no runtime overhead)

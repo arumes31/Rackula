@@ -145,26 +145,6 @@ export const debug = {
       );
     }
   },
-
-  /**
-   * Collision detection logging: [Rackula:collision] message
-   */
-  collision(data: {
-    position: number;
-    height: number;
-    face: string;
-    isFullDepth: boolean;
-    existingDevices: Array<{ position: number; height: number; face: string }>;
-    result: "clear" | string; // 'clear' or 'blocked by device at U{n}'
-  }) {
-    if (getDebugFlag()) {
-      console.log(
-        `[${LOG_PREFIX}:collision] checking pos=${data.position} height=${data.height} face=${data.face} isFullDepth=${data.isFullDepth}`,
-        `\n  existing devices: ${JSON.stringify(data.existingDevices)}`,
-        `\n  result: ${data.result}`,
-      );
-    }
-  },
 };
 
 // Check if running in test environment
