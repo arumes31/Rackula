@@ -17,20 +17,20 @@ import { generateId } from "./device";
 import { createDefaultRack } from "./serialization";
 
 // =============================================================================
-// Layout Conversion Functions
+// Helper Functions
 // =============================================================================
 
 /**
- * Validate and normalize rack width to supported values (10" or 19")
- * Logs warning and defaults to 19" for invalid values
+ * Normalize rack width to valid share format values (10 or 19)
+ * Maps non-standard widths (21, 23) to 19
  */
 function normalizeRackWidth(width: number): 10 | 19 {
-  if (width === 10 || width === 19) {
-    return width;
-  }
-  console.warn(`Invalid rack width ${width} in share link, defaulting to 19"`);
-  return 19;
+  return width === 10 ? 10 : 19;
 }
+
+// =============================================================================
+// Layout Conversion Functions
+// =============================================================================
 
 /**
  * Convert Layout to MinimalLayout
