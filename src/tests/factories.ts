@@ -233,11 +233,7 @@ export function createTestDeviceLibrary(): DeviceType[] {
 export function createTestSlot(overrides: Partial<Slot> = {}): Slot {
   return {
     id: overrides.id ?? "slot-1",
-    name: overrides.name,
     position: overrides.position ?? { row: 0, col: 0 },
-    width_fraction: overrides.width_fraction,
-    height_units: overrides.height_units,
-    accepts: overrides.accepts,
     ...overrides,
   };
 }

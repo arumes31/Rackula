@@ -824,5 +824,6 @@ export type CableType = z.infer<typeof CableTypeSchema>;
 export type CableStatus = z.infer<typeof CableStatusSchema>;
 export type LengthUnit = z.infer<typeof LengthUnitSchema>;
 export type CableZod = z.infer<typeof CableSchema>;
-export type SlotPosition2D = z.infer<typeof SlotPosition2DSchema>;
+/** Validated slot position - row/col are non-negative integers (unlike plain SlotPosition2D interface which accepts any number) */
+export type SlotPosition2DZod = z.infer<typeof SlotPosition2DSchema>;
 export type SlotZod = z.infer<typeof SlotSchema>;
