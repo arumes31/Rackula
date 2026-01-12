@@ -31,8 +31,8 @@ ready → in-progress (agent claims) → ready (released on completion/block)
 
 ```bash
 # Required pattern - always use worktrees with absolute paths
-git worktree add ../Rackula-issue-<N> -b <type>/<N>-<desc>
-WORKTREE_DIR="$(pwd)/../Rackula-issue-<N>"
+git worktree add .worktree/Rackula-issue-<N> -b <type>/<N>-<desc>
+WORKTREE_DIR="$(pwd)/.worktree/Rackula-issue-<N>"
 (cd "$WORKTREE_DIR" && npm install)
 ```
 
