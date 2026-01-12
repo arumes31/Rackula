@@ -16,6 +16,54 @@ import {
 } from "$lib/utils/sidebarWidth";
 import type { DisplayMode, AnnotationField } from "$lib/types";
 
+// Sidebar tab type
+export type SidebarTab = "hide" | "devices" | "racks";
+
+// localStorage key for sidebar tab
+const SIDEBAR_TAB_KEY = "Rackula_sidebar_tab";
+
+/**
+ * Valid sidebar tab values for runtime validation
+ */
+const VALID_SIDEBAR_TABS: readonly SidebarTab[] = [
+  "hide",
+  "devices",
+  "racks",
+] as const;
+
+/**
+ * Check if a value is a valid SidebarTab
+ */
+function isValidSidebarTab(tab: string): tab is SidebarTab {
+  return VALID_SIDEBAR_TABS.includes(tab as SidebarTab);
+}
+
+/**
+ * Load sidebar tab from localStorage
+ */
+function loadSidebarTabFromStorage(): SidebarTab {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_TAB_KEY);
+    if (stored && isValidSidebarTab(stored)) {
+      return stored;
+    }
+  } catch {
+    // localStorage not available
+  }
+  return "devices"; // default
+}
+
+/**
+ * Save sidebar tab to localStorage
+ */
+function saveSidebarTabToStorage(tab: SidebarTab): void {
+  try {
+    localStorage.setItem(SIDEBAR_TAB_KEY, tab);
+  } catch {
+    // localStorage not available
+  }
+}
+
 // Zoom constants
 export const ZOOM_MIN = 50;
 export const ZOOM_MAX = 200;
@@ -24,6 +72,7 @@ export const ZOOM_STEP = 25;
 // Load initial values from storage
 const initialTheme = loadThemeFromStorage();
 const initialSidebarCollapsed = loadSidebarCollapsedFromStorage();
+const initialSidebarTab = loadSidebarTabFromStorage();
 
 // Module-level state (using $state rune)
 let theme = $state<Theme>(initialTheme);
@@ -35,6 +84,7 @@ let showAnnotations = $state(false);
 let annotationField = $state<AnnotationField>("name");
 let showBanana = $state(false);
 let sidebarCollapsed = $state(initialSidebarCollapsed);
+let sidebarTab = $state<SidebarTab>(initialSidebarTab);
 
 // Derived values (using $derived rune)
 const canZoomIn = $derived(zoom < ZOOM_MAX);
@@ -61,6 +111,7 @@ export function resetUIStore(): void {
   annotationField = "name";
   showBanana = false;
   sidebarCollapsed = loadSidebarCollapsedFromStorage();
+  sidebarTab = loadSidebarTabFromStorage();
   applyThemeToDocument(theme);
 }
 
@@ -125,6 +176,9 @@ export function getUIStore() {
     get sidebarWidthPx() {
       return sidebarWidthPx;
     },
+    get sidebarTab() {
+      return sidebarTab;
+    },
 
     // Theme actions
     toggleTheme,
@@ -159,6 +213,7 @@ export function getUIStore() {
     toggleSidebarCollapsed,
     collapseSidebar,
     expandSidebar,
+    setSidebarTab,
   };
 }
 
@@ -348,4 +403,14 @@ function expandSidebar(): void {
     sidebarCollapsed = false;
     saveSidebarCollapsedToStorage(false);
   }
+}
+
+/**
+ * Set the sidebar tab
+ * @param tab - Tab to set ('hide', 'devices', or 'racks')
+ */
+function setSidebarTab(tab: SidebarTab): void {
+  if (!isValidSidebarTab(tab)) return;
+  sidebarTab = tab;
+  saveSidebarTabToStorage(tab);
 }

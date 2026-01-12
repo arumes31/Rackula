@@ -35,8 +35,10 @@
   } from "$lib/types";
   import type { ImageData } from "$lib/types/images";
 
-  // Synthetic rack ID for single-rack mode
-  const RACK_ID = "rack-0";
+  // Use dynamic active rack ID from store
+  const currentRackId = $derived(
+    layoutStore.activeRackId ?? layoutStore.racks[0]?.id ?? null,
+  );
 
   // Map manufacturer names to simple-icons slugs
   const manufacturerIconMap: Record<string, string> = {
@@ -82,17 +84,14 @@
   // State for delete device type confirmation dialog
   let showDeleteConfirm = $state(false);
 
-  // Get the selected rack if any (single-rack mode)
+  // Get the selected rack if any (multi-rack mode)
   const selectedRack = $derived.by(() => {
-    if (
-      !selectionStore.isRackSelected ||
-      selectionStore.selectedRackId !== RACK_ID
-    )
-      return null;
-    return layoutStore.rack;
+    if (!selectionStore.isRackSelected || !currentRackId) return null;
+    if (selectionStore.selectedRackId !== currentRackId) return null;
+    return layoutStore.activeRack;
   });
 
-  // Get the selected device info if any (single-rack mode)
+  // Get the selected device info if any (multi-rack mode)
   const selectedDeviceInfo = $derived.by(
     (): {
       device: DeviceType;
@@ -107,7 +106,7 @@
       )
         return null;
 
-      const rack = layoutStore.rack;
+      const rack = layoutStore.activeRack;
       if (!rack) return null;
 
       // Find device by ID (UUID-based tracking)
@@ -191,7 +190,7 @@
   // Update rack name on blur
   function handleNameBlur() {
     if (selectedRack && rackName !== selectedRack.name) {
-      layoutStore.updateRack(RACK_ID, { name: rackName });
+      layoutStore.updateRack(currentRackId!, { name: rackName });
     }
   }
 
@@ -208,7 +207,7 @@
       const trimmedNotes = rackNotes.trim();
       const notesToSave = trimmedNotes === "" ? undefined : trimmedNotes;
       if (notesToSave !== selectedRack.notes) {
-        layoutStore.updateRack(RACK_ID, { notes: notesToSave });
+        layoutStore.updateRack(currentRackId!, { notes: notesToSave });
       }
     }
   }
@@ -236,9 +235,9 @@
 
     // Clear error and apply change
     resizeError = null;
-    layoutStore.updateRack(RACK_ID, { height: newHeight });
+    layoutStore.updateRack(currentRackId!, { height: newHeight });
     // Reset view to center the resized rack
-    canvasStore.fitAll(layoutStore.rack ? [layoutStore.rack] : []);
+    canvasStore.fitAll(layoutStore.activeRack ? [layoutStore.activeRack] : []);
     return true;
   }
 
@@ -260,7 +259,7 @@
   // Delete selected rack
   function handleDeleteRack() {
     if (selectedRack) {
-      layoutStore.deleteRack(RACK_ID);
+      layoutStore.deleteRack(currentRackId!);
       selectionStore.clearSelection();
     }
   }
@@ -349,8 +348,10 @@
   const deviceTypePlacementCount = $derived.by(() => {
     if (!selectedDeviceInfo) return 0;
     const slug = selectedDeviceInfo.device.slug;
-    return layoutStore.rack.devices.filter((d) => d.device_type === slug)
-      .length;
+    const activeRack = layoutStore.activeRack;
+    return activeRack
+      ? activeRack.devices.filter((d) => d.device_type === slug).length
+      : 0;
   });
 
   // Sync device notes with selection
@@ -411,12 +412,14 @@
       const trimmedNotes = deviceNotes.trim();
       const notesToSave = trimmedNotes === "" ? undefined : trimmedNotes;
       // Update via updateRack - modify the device in the rack's devices array
-      const updatedDevices = [...layoutStore.rack.devices];
+      const activeRack = layoutStore.activeRack;
+      if (!activeRack) return;
+      const updatedDevices = [...activeRack.devices];
       updatedDevices[selectedDeviceInfo.deviceIndex] = {
         ...updatedDevices[selectedDeviceInfo.deviceIndex]!,
         notes: notesToSave,
       };
-      layoutStore.updateRack(RACK_ID, { devices: updatedDevices });
+      layoutStore.updateRack(currentRackId!, { devices: updatedDevices });
     }
   }
 
@@ -424,7 +427,9 @@
   function handleDeviceIpBlur() {
     if (selectedDeviceInfo) {
       const trimmedIp = deviceIp.trim();
-      const updatedDevices = [...layoutStore.rack.devices];
+      const activeRack = layoutStore.activeRack;
+      if (!activeRack) return;
+      const updatedDevices = [...activeRack.devices];
       const currentDevice = updatedDevices[selectedDeviceInfo.deviceIndex]!;
       const currentCustomFields = currentDevice.custom_fields ?? {};
 
@@ -443,7 +448,7 @@
         ...currentDevice,
         custom_fields: newCustomFields,
       };
-      layoutStore.updateRack(RACK_ID, { devices: updatedDevices });
+      layoutStore.updateRack(currentRackId!, { devices: updatedDevices });
     }
   }
 
@@ -504,7 +509,7 @@
     );
 
     if (isValid) {
-      layoutStore.moveDevice(RACK_ID, deviceIndex, newPosition);
+      layoutStore.moveDevice(currentRackId!, deviceIndex, newPosition);
     }
   }
 
@@ -614,7 +619,7 @@
           ]}
           value={selectedRack.desc_units ? "top" : "bottom"}
           onchange={(value) =>
-            layoutStore.updateRack(RACK_ID, {
+            layoutStore.updateRack(currentRackId!, {
               desc_units: value === "top",
             })}
           ariaLabel="U numbering direction"
@@ -630,7 +635,7 @@
           ]}
           value={selectedRack.show_rear ? "show" : "hide"}
           onchange={(value) =>
-            layoutStore.updateRack(RACK_ID, {
+            layoutStore.updateRack(currentRackId!, {
               show_rear: value === "show",
             })}
           ariaLabel="Show rear view on canvas"
@@ -861,20 +866,24 @@
                 selectedDeviceInfo.device.colour}
               defaultValue={selectedDeviceInfo.device.colour}
               onchange={(colour) => {
-                const deviceIndex = layoutStore.rack?.devices.findIndex(
+                // Use rack from selectedDeviceInfo to avoid race condition
+                const rackId = selectedDeviceInfo.rack.id;
+                const deviceIndex = selectedDeviceInfo.rack.devices.findIndex(
                   (d) => d.id === selectedDeviceInfo.placedDevice.id,
                 );
-                if (deviceIndex !== undefined && deviceIndex >= 0) {
-                  layoutStore.updateDeviceColour(RACK_ID, deviceIndex, colour);
+                if (deviceIndex >= 0) {
+                  layoutStore.updateDeviceColour(rackId, deviceIndex, colour);
                 }
               }}
               onreset={() => {
-                const deviceIndex = layoutStore.rack?.devices.findIndex(
+                // Use rack from selectedDeviceInfo to avoid race condition
+                const rackId = selectedDeviceInfo.rack.id;
+                const deviceIndex = selectedDeviceInfo.rack.devices.findIndex(
                   (d) => d.id === selectedDeviceInfo.placedDevice.id,
                 );
-                if (deviceIndex !== undefined && deviceIndex >= 0) {
+                if (deviceIndex >= 0) {
                   layoutStore.updateDeviceColour(
-                    RACK_ID,
+                    rackId,
                     deviceIndex,
                     undefined,
                   );

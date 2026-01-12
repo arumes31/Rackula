@@ -25,6 +25,8 @@
   import DeviceDetails from "$lib/components/DeviceDetails.svelte";
   import DeviceLibraryFAB from "$lib/components/DeviceLibraryFAB.svelte";
   import RackEditSheet from "$lib/components/RackEditSheet.svelte";
+  import SidebarTabs from "$lib/components/SidebarTabs.svelte";
+  import RackList from "$lib/components/RackList.svelte";
   import {
     getShareParam,
     clearShareParam,
@@ -79,9 +81,6 @@
   const imageStore = getImageStore();
   const viewportStore = getViewportStore();
   const placementStore = getPlacementStore();
-
-  // Single-rack mode constant
-  const RACK_ID = "rack-0";
 
   // Dialog state
   let newRackFormOpen = $state(false);
@@ -159,7 +158,7 @@
 
         // Reset view to center the loaded rack after DOM updates
         requestAnimationFrame(() => {
-          canvasStore.fitAll(layoutStore.rack ? [layoutStore.rack] : []);
+          canvasStore.fitAll(layoutStore.racks);
         });
         return; // Don't check autosave or show new rack dialog
       } else {
@@ -177,7 +176,7 @@
       // Don't show new rack dialog - user has work in progress
       // Reset view to center the loaded rack after DOM updates
       requestAnimationFrame(() => {
-        canvasStore.fitAll(layoutStore.rack ? [layoutStore.rack] : []);
+        canvasStore.fitAll(layoutStore.racks);
       });
       return;
     }
@@ -190,11 +189,12 @@
 
   // Toolbar event handlers
   function handleNewRack() {
-    if (layoutStore.rackCount > 0) {
-      showReplaceDialog = true;
-    } else {
-      newRackFormOpen = true;
+    // Multi-rack mode: always open new rack form (no replace dialog)
+    if (!layoutStore.canAddRack) {
+      toastStore.showToast("Maximum number of racks reached", "warning");
+      return;
     }
+    newRackFormOpen = true;
   }
 
   function handleNewRackCreate(data: {
@@ -247,9 +247,8 @@
       clearSession();
       toastStore.showToast(`Saved ${filename}`, "success", 3000);
 
-      // Track save event
-      const deviceCount = layoutStore.rack?.devices.length ?? 0;
-      analytics.trackSave(deviceCount);
+      // Track save event (total devices across all racks)
+      analytics.trackSave(layoutStore.totalDeviceCount);
 
       // After save, if pendingSaveFirst, reset and open new rack form
       if (pendingSaveFirst) {
@@ -301,7 +300,7 @@
 
       // Reset view to center the loaded rack after DOM updates
       requestAnimationFrame(() => {
-        canvasStore.fitAll(layoutStore.rack ? [layoutStore.rack] : []);
+        canvasStore.fitAll(layoutStore.racks);
       });
 
       // Show appropriate toast based on image loading results
@@ -315,9 +314,8 @@
         toastStore.showToast("Layout loaded successfully", "success");
       }
 
-      // Track load event
-      const deviceCount = layoutStore.rack?.devices.length ?? 0;
-      analytics.trackLoad(deviceCount);
+      // Track load event (total devices across all racks)
+      analytics.trackLoad(layoutStore.totalDeviceCount);
     } catch (error) {
       console.error("Failed to load layout:", error);
       toastStore.showToast(
@@ -354,8 +352,8 @@
     exportDialogOpen = false;
 
     try {
-      // Single-rack mode: export the rack if it exists
-      const racksToExport = layoutStore.rack ? [layoutStore.rack] : [];
+      // Multi-rack mode: export all racks
+      const racksToExport = layoutStore.racks;
 
       if (racksToExport.length === 0) {
         toastStore.showToast("No rack to export", "warning");
@@ -422,7 +420,7 @@
         toastStore.showToast("PDF exported successfully", "success");
         analytics.trackExportPDF(exportViewOrDefault);
       } else if (options.format === "csv") {
-        // CSV export uses null view (no view in filename)
+        // CSV export only supports single rack - warn if multiple racks exist
         const csvContent = exportToCSV(
           racksToExport[0]!,
           layoutStore.device_types,
@@ -434,7 +432,11 @@
           options.format,
         );
         downloadBlob(blob, filename);
-        toastStore.showToast("CSV exported successfully", "success");
+        const successMsg =
+          racksToExport.length > 1
+            ? `CSV exported (first rack only - "${racksToExport[0]!.name}")`
+            : "CSV exported successfully";
+        toastStore.showToast(successMsg, "success");
         analytics.trackExportCSV();
       }
     } catch (error) {
@@ -457,9 +459,8 @@
     }
     shareDialogOpen = true;
 
-    // Track share event
-    const deviceCount = layoutStore.rack?.devices.length ?? 0;
-    analytics.trackShare(deviceCount);
+    // Track share event (total devices across all racks)
+    analytics.trackShare(layoutStore.totalDeviceCount);
   }
 
   function handleShareClose() {
@@ -468,8 +469,8 @@
 
   function handleDelete() {
     if (selectionStore.isRackSelected && selectionStore.selectedRackId) {
-      // Single-rack mode
-      const rack = layoutStore.rack;
+      // Get the selected rack by ID
+      const rack = layoutStore.getRackById(selectionStore.selectedRackId);
       if (rack) {
         deleteTarget = { type: "rack", name: rack.name };
         confirmDeleteOpen = true;
@@ -479,8 +480,8 @@
         selectionStore.selectedRackId !== null &&
         selectionStore.selectedDeviceId !== null
       ) {
-        // Single-rack mode
-        const rack = layoutStore.rack;
+        // Get the rack containing the selected device
+        const rack = layoutStore.getRackById(selectionStore.selectedRackId);
         const deviceIndex = selectionStore.getSelectedDeviceIndex(
           rack?.devices ?? [],
         );
@@ -504,15 +505,13 @@
       layoutStore.deleteRack(selectionStore.selectedRackId);
       selectionStore.clearSelection();
     } else if (deleteTarget?.type === "device") {
-      const rack = layoutStore.rack;
+      const rackId = selectionStore.selectedRackId;
+      const rack = rackId ? layoutStore.getRackById(rackId) : null;
       const deviceIndex = selectionStore.getSelectedDeviceIndex(
         rack?.devices ?? [],
       );
-      if (selectionStore.selectedRackId !== null && deviceIndex !== null) {
-        layoutStore.removeDeviceFromRack(
-          selectionStore.selectedRackId,
-          deviceIndex,
-        );
+      if (rackId !== null && deviceIndex !== null) {
+        layoutStore.removeDeviceFromRack(rackId, deviceIndex);
         selectionStore.clearSelection();
       }
     }
@@ -526,7 +525,7 @@
   }
 
   function handleFitAll() {
-    canvasStore.fitAll(layoutStore.rack ? [layoutStore.rack] : []);
+    canvasStore.fitAll(layoutStore.racks);
   }
 
   function handleToggleTheme() {
@@ -659,15 +658,16 @@
 
   // Watch for device selection changes to trigger mobile bottom sheet
   $effect(() => {
+    const activeRack = layoutStore.activeRack;
     if (viewportStore.isMobile && selectionStore.isDeviceSelected) {
       const deviceIndex = selectionStore.getSelectedDeviceIndex(
-        layoutStore.rack?.devices ?? [],
+        activeRack?.devices ?? [],
       );
       console.log("[Mobile] Device selected:", {
         deviceIndex,
-        hasRack: !!layoutStore.rack,
+        hasRack: !!activeRack,
       });
-      if (deviceIndex !== null && layoutStore.rack) {
+      if (deviceIndex !== null && activeRack) {
         selectedDeviceForSheet = deviceIndex;
         bottomSheetOpen = true;
         console.log("[Mobile] Opening bottom sheet for device", deviceIndex);
@@ -681,9 +681,7 @@
         );
         bottomSheetOpen = false;
         selectedDeviceForSheet = null;
-        if (layoutStore.rack) {
-          canvasStore.fitAll([layoutStore.rack]);
-        }
+        canvasStore.fitAll(layoutStore.racks);
       }
     }
   });
@@ -697,33 +695,44 @@
 
   // Handle mobile device actions (remove, move)
   function handleMobileRemoveDevice() {
-    if (selectedDeviceForSheet !== null && layoutStore.rack) {
-      layoutStore.removeDeviceFromRack(RACK_ID, selectedDeviceForSheet);
+    const activeRack = layoutStore.activeRack;
+    if (selectedDeviceForSheet !== null && activeRack) {
+      layoutStore.removeDeviceFromRack(activeRack.id, selectedDeviceForSheet);
       handleBottomSheetClose();
     }
   }
 
   function handleMobileMoveDeviceUp() {
-    if (selectedDeviceForSheet !== null && layoutStore.rack) {
-      const device = layoutStore.rack.devices[selectedDeviceForSheet];
+    const activeRack = layoutStore.activeRack;
+    if (selectedDeviceForSheet !== null && activeRack) {
+      const device = activeRack.devices[selectedDeviceForSheet];
       const deviceType = layoutStore.device_types.find(
         (dt) => dt.slug === device?.device_type,
       );
       if (device && deviceType) {
         // Move up = increase position (higher U number)
         const newPosition = device.position + 1;
-        layoutStore.moveDevice(RACK_ID, selectedDeviceForSheet, newPosition);
+        layoutStore.moveDevice(
+          activeRack.id,
+          selectedDeviceForSheet,
+          newPosition,
+        );
       }
     }
   }
 
   function handleMobileMoveDeviceDown() {
-    if (selectedDeviceForSheet !== null && layoutStore.rack) {
-      const device = layoutStore.rack.devices[selectedDeviceForSheet];
+    const activeRack = layoutStore.activeRack;
+    if (selectedDeviceForSheet !== null && activeRack) {
+      const device = activeRack.devices[selectedDeviceForSheet];
       if (device && device.position > 1) {
         // Move down = decrease position (lower U number)
         const newPosition = device.position - 1;
-        layoutStore.moveDevice(RACK_ID, selectedDeviceForSheet, newPosition);
+        layoutStore.moveDevice(
+          activeRack.id,
+          selectedDeviceForSheet,
+          newPosition,
+        );
       }
     }
   }
@@ -829,12 +838,20 @@
   />
 
   <main class="app-main" class:mobile={viewportStore.isMobile}>
-    {#if !viewportStore.isMobile}
+    {#if !viewportStore.isMobile && uiStore.sidebarTab !== "hide"}
       <Sidebar side="left">
-        <DevicePalette
-          onadddevice={handleAddDevice}
-          onimportfromnetbox={handleImportFromNetBox}
+        <SidebarTabs
+          activeTab={uiStore.sidebarTab}
+          onchange={(tab) => uiStore.setSidebarTab(tab)}
         />
+        {#if uiStore.sidebarTab === "devices"}
+          <DevicePalette
+            onadddevice={handleAddDevice}
+            onimportfromnetbox={handleImportFromNetBox}
+          />
+        {:else if uiStore.sidebarTab === "racks"}
+          <RackList onaddrack={handleNewRack} />
+        {/if}
       </Sidebar>
     {/if}
 
@@ -852,13 +869,14 @@
   </main>
 
   <!-- Mobile bottom sheet for device details -->
-  {#if viewportStore.isMobile && bottomSheetOpen && selectedDeviceForSheet !== null && layoutStore.rack}
-    {@const device = layoutStore.rack.devices[selectedDeviceForSheet]}
+  {#if viewportStore.isMobile && bottomSheetOpen && selectedDeviceForSheet !== null && layoutStore.activeRack}
+    {@const activeRack = layoutStore.activeRack}
+    {@const device = activeRack.devices[selectedDeviceForSheet]}
     {@const deviceType = device
       ? layoutStore.device_types.find((dt) => dt.slug === device.device_type)
       : null}
     {#if device && deviceType}
-      {@const rackHeight = layoutStore.rack?.height ?? 42}
+      {@const rackHeight = activeRack.height}
       {@const maxPosition = rackHeight - deviceType.u_height + 1}
       {@const canMoveUp = device.position < maxPosition}
       {@const canMoveDown = device.position > 1}
@@ -870,7 +888,7 @@
         <DeviceDetails
           {device}
           {deviceType}
-          rackView={layoutStore.rack?.view}
+          rackView={activeRack.view}
           {rackHeight}
           showActions={true}
           onremove={handleMobileRemoveDevice}
@@ -922,7 +940,7 @@
 
   <ExportDialog
     open={exportDialogOpen}
-    racks={layoutStore.rack ? [layoutStore.rack] : []}
+    racks={layoutStore.racks}
     deviceTypes={layoutStore.device_types}
     images={imageStore.getAllImages()}
     displayMode={uiStore.displayMode}
@@ -971,14 +989,14 @@
   {/if}
 
   <!-- Mobile rack edit sheet (opened via long press on rack) -->
-  {#if viewportStore.isMobile && rackEditSheetOpen && layoutStore.rack}
+  {#if viewportStore.isMobile && rackEditSheetOpen && layoutStore.activeRack}
     <BottomSheet
       bind:open={rackEditSheetOpen}
       title="Edit Rack"
       onclose={handleRackEditSheetClose}
     >
       <RackEditSheet
-        rack={layoutStore.rack}
+        rack={layoutStore.activeRack}
         onclose={handleRackEditSheetClose}
       />
     </BottomSheet>
