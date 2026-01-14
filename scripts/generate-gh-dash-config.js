@@ -127,7 +127,7 @@ prSections:
   - title: "All Open"
     filters: "is:open"
 
-issueSections:
+issuesSections:
   - title: "Ready"
     filters: "is:open label:ready"
   - title: "In Progress"
