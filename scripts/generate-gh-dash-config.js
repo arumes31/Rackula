@@ -113,6 +113,23 @@ function generateConfig(nextMilestone, currentVersion) {
 #
 # Regenerate with: node scripts/generate-gh-dash-config.js
 
+# Dracula theme (from Rackula brand guide)
+theme:
+  colors:
+    text:
+      primary: "#F8F8F2"
+      secondary: "#9A9A9A"
+      inverted: "#282A36"
+      faint: "#6272A4"
+      warning: "#FF5555"
+      success: "#50FA7B"
+    background:
+      selected: "#44475A"
+    border:
+      primary: "#BD93F9"
+      secondary: "#44475A"
+      faint: "#343746"
+
 defaults:
   view: issues
   prsLimit: 20
