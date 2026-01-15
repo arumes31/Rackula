@@ -93,6 +93,33 @@ describe("Rack Group Store", () => {
 
       expect(store.rack_groups.length).toBe(initialCount + 1);
     });
+
+    it("rejects creating group with rack already in another group", () => {
+      const store = getLayoutStore();
+      store.addRack("Rack 1", 42);
+      store.addRack("Rack 2", 42);
+      store.addRack("Rack 3", 42);
+      const rack1Id = store.racks[0]!.id;
+      const rack2Id = store.racks[1]!.id;
+      const rack3Id = store.racks[2]!.id;
+
+      // Create first group
+      const result1 = store.createRackGroup(
+        "Group A",
+        [rack1Id, rack2Id],
+        "row",
+      );
+      expect(result1.group).toBeDefined();
+
+      // Try to create second group with rack1 (already in Group A)
+      const result2 = store.createRackGroup(
+        "Group B",
+        [rack1Id, rack3Id],
+        "row",
+      );
+      expect(result2.error).toContain("already in");
+      expect(result2.error).toContain("Group A");
+    });
   });
 
   describe("createRackGroup with bayed preset", () => {
@@ -309,6 +336,25 @@ describe("Rack Group Store", () => {
       store.addRackToGroup(group!.id, rack2!.id);
 
       expect(store.isDirty).toBe(true);
+    });
+
+    it("rejects adding rack already in another group", () => {
+      const store = getLayoutStore();
+      store.addRack("Rack 1", 42);
+      store.addRack("Rack 2", 42);
+      store.addRack("Rack 3", 42);
+      const rack1Id = store.racks[0]!.id;
+      const rack2Id = store.racks[1]!.id;
+
+      // Create two groups
+      store.createRackGroup("Group A", [rack1Id], "row");
+      const result2 = store.createRackGroup("Group B", [rack2Id], "row");
+      const groupBId = result2.group!.id;
+
+      // Try to add rack1 (in Group A) to Group B
+      const addResult = store.addRackToGroup(groupBId, rack1Id);
+      expect(addResult.error).toContain("already in");
+      expect(addResult.error).toContain("Group A");
     });
   });
 

@@ -621,6 +621,18 @@ function createRackGroup(
     }
   }
 
+  // Validate no rack is already in another group
+  for (const rackId of rackIds) {
+    const existingGroup = getRackGroupForRack(rackId);
+    if (existingGroup) {
+      const rackName =
+        layout.racks.find((r) => r.id === rackId)?.name ?? rackId;
+      return {
+        error: `Rack "${rackName}" is already in group "${existingGroup.name ?? existingGroup.id}". Remove it first.`,
+      };
+    }
+  }
+
   // Validate bayed preset height requirement
   const actualPreset = preset ?? "row";
   if (actualPreset === "bayed") {
@@ -750,6 +762,15 @@ function addRackToGroup(groupId: string, rackId: string): { error?: string } {
   // Check rack not already in group
   if (group.rack_ids.includes(rackId)) {
     return { error: "Rack is already in this group" };
+  }
+
+  // Check rack not in ANY other group
+  const existingGroup = getRackGroupForRack(rackId);
+  if (existingGroup && existingGroup.id !== groupId) {
+    const rackName = rack.name ?? rackId;
+    return {
+      error: `Rack "${rackName}" is already in group "${existingGroup.name ?? existingGroup.id}". Remove it first.`,
+    };
   }
 
   // Validate bayed preset height requirement
