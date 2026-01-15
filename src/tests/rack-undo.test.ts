@@ -1,0 +1,289 @@
+/**
+ * Rack Add/Delete Undo/Redo Tests
+ *
+ * Tests for undoing and redoing rack creation and deletion.
+ * Verifies that group memberships are properly restored on undo.
+ *
+ * Issue: #559 - Make Rack Add/Delete Undoable
+ */
+
+import { describe, it, expect, beforeEach } from "vitest";
+import { getLayoutStore, resetLayoutStore } from "$lib/stores/layout.svelte";
+import { resetHistoryStore } from "$lib/stores/history.svelte";
+
+describe("Rack Add/Delete Undo/Redo", () => {
+  beforeEach(() => {
+    resetLayoutStore();
+    resetHistoryStore();
+  });
+
+  // Note: resetLayoutStore creates an initial layout with 1 default rack
+  // Tests account for this baseline state
+
+  describe("addRack undo/redo", () => {
+    it("undoes rack creation", () => {
+      const store = getLayoutStore();
+      const initialRackCount = store.racks.length;
+      store.clearHistory();
+
+      const rack = store.addRack("Test Rack", 42);
+      expect(rack).not.toBeNull();
+      expect(store.racks.length).toBe(initialRackCount + 1);
+      expect(store.getRackById(rack!.id)).toBeDefined();
+
+      store.undo();
+
+      expect(store.racks.length).toBe(initialRackCount);
+      expect(store.getRackById(rack!.id)).toBeUndefined();
+    });
+
+    it("redoes rack creation after undo", () => {
+      const store = getLayoutStore();
+      const initialRackCount = store.racks.length;
+      store.clearHistory();
+
+      const rack = store.addRack("Test Rack", 42);
+      const rackId = rack!.id;
+
+      store.undo();
+      expect(store.racks.length).toBe(initialRackCount);
+
+      store.redo();
+
+      expect(store.racks.length).toBe(initialRackCount + 1);
+      expect(store.getRackById(rackId)).toBeDefined();
+      expect(store.getRackById(rackId)!.name).toBe("Test Rack");
+    });
+
+    it("preserves rack properties on redo", () => {
+      const store = getLayoutStore();
+      store.clearHistory();
+
+      const rack = store.addRack("Custom Rack", 24, 19, "2-post", true, 5);
+
+      store.undo();
+      store.redo();
+
+      const restored = store.getRackById(rack!.id);
+      expect(restored).toBeDefined();
+      expect(restored!.name).toBe("Custom Rack");
+      expect(restored!.height).toBe(24);
+      expect(restored!.width).toBe(19);
+      expect(restored!.form_factor).toBe("2-post");
+      expect(restored!.desc_units).toBe(true);
+      expect(restored!.starting_unit).toBe(5);
+    });
+
+    it("allows multiple rack creations with sequential undo", () => {
+      const store = getLayoutStore();
+      const initialRackCount = store.racks.length;
+      store.clearHistory();
+
+      const rack1 = store.addRack("Rack 1", 42);
+      const rack2 = store.addRack("Rack 2", 42);
+      const rack3 = store.addRack("Rack 3", 42);
+
+      expect(store.racks.length).toBe(initialRackCount + 3);
+
+      store.undo(); // Undo rack3
+      expect(store.racks.length).toBe(initialRackCount + 2);
+      expect(store.getRackById(rack3!.id)).toBeUndefined();
+
+      store.undo(); // Undo rack2
+      expect(store.racks.length).toBe(initialRackCount + 1);
+      expect(store.getRackById(rack2!.id)).toBeUndefined();
+
+      store.undo(); // Undo rack1
+      expect(store.racks.length).toBe(initialRackCount);
+      expect(store.getRackById(rack1!.id)).toBeUndefined();
+    });
+  });
+
+  describe("deleteRack undo/redo", () => {
+    it("undoes rack deletion", () => {
+      const store = getLayoutStore();
+      const rack = store.addRack("Test Rack", 42);
+      const countAfterAdd = store.racks.length;
+      store.clearHistory();
+
+      store.deleteRack(rack!.id);
+      expect(store.racks.length).toBe(countAfterAdd - 1);
+      expect(store.getRackById(rack!.id)).toBeUndefined();
+
+      store.undo();
+
+      expect(store.racks.length).toBe(countAfterAdd);
+      expect(store.getRackById(rack!.id)).toBeDefined();
+      expect(store.getRackById(rack!.id)!.name).toBe("Test Rack");
+    });
+
+    it("redoes rack deletion after undo", () => {
+      const store = getLayoutStore();
+      const rack = store.addRack("Test Rack", 42);
+      const countAfterAdd = store.racks.length;
+      store.clearHistory();
+
+      store.deleteRack(rack!.id);
+      store.undo();
+      expect(store.racks.length).toBe(countAfterAdd);
+
+      store.redo();
+
+      expect(store.racks.length).toBe(countAfterAdd - 1);
+      expect(store.getRackById(rack!.id)).toBeUndefined();
+    });
+
+    it("preserves rack properties on undo delete", () => {
+      const store = getLayoutStore();
+      const rack = store.addRack("Custom Rack", 24, 19, "wall-mount", true, 1);
+      store.clearHistory();
+
+      store.deleteRack(rack!.id);
+      store.undo();
+
+      const restored = store.getRackById(rack!.id);
+      expect(restored).toBeDefined();
+      expect(restored!.name).toBe("Custom Rack");
+      expect(restored!.height).toBe(24);
+      expect(restored!.form_factor).toBe("wall-mount");
+    });
+  });
+
+  describe("deleteRack with group membership restoration", () => {
+    it("restores group membership when undoing rack deletion", () => {
+      const store = getLayoutStore();
+      const rack1 = store.addRack("Rack 1", 42);
+      const rack2 = store.addRack("Rack 2", 42);
+
+      // Create a group with both racks
+      const { group } = store.createRackGroup("Test Group", [
+        rack1!.id,
+        rack2!.id,
+      ]);
+      store.clearHistory();
+
+      // Delete rack1
+      store.deleteRack(rack1!.id);
+
+      // Group should now only contain rack2
+      const updatedGroup = store.getRackGroupById(group!.id);
+      expect(updatedGroup).toBeDefined();
+      expect(updatedGroup!.rack_ids).not.toContain(rack1!.id);
+      expect(updatedGroup!.rack_ids).toContain(rack2!.id);
+
+      // Undo deletion
+      store.undo();
+
+      // Group should be restored with both racks
+      const restoredGroup = store.getRackGroupById(group!.id);
+      expect(restoredGroup).toBeDefined();
+      expect(restoredGroup!.rack_ids).toContain(rack1!.id);
+      expect(restoredGroup!.rack_ids).toContain(rack2!.id);
+    });
+
+    it("recreates group when undoing deletion of last rack in group", () => {
+      const store = getLayoutStore();
+      const rack = store.addRack("Solo Rack", 42);
+
+      // Create a group with single rack
+      const { group } = store.createRackGroup("Solo Group", [rack!.id]);
+      const groupId = group!.id;
+      store.clearHistory();
+
+      // Delete the rack (should also delete the group)
+      store.deleteRack(rack!.id);
+      expect(store.getRackGroupById(groupId)).toBeUndefined();
+
+      // Undo deletion
+      store.undo();
+
+      // Both rack and group should be restored
+      expect(store.getRackById(rack!.id)).toBeDefined();
+      const restoredGroup = store.getRackGroupById(groupId);
+      expect(restoredGroup).toBeDefined();
+      expect(restoredGroup!.rack_ids).toContain(rack!.id);
+    });
+
+    it("handles deletion of rack in multiple-rack group correctly", () => {
+      const store = getLayoutStore();
+      const rack1 = store.addRack("Rack 1", 20);
+      const rack2 = store.addRack("Rack 2", 20);
+      const rack3 = store.addRack("Rack 3", 20);
+
+      const { group } = store.createRackGroup(
+        "Bayed Group",
+        [rack1!.id, rack2!.id, rack3!.id],
+        "bayed",
+      );
+      store.clearHistory();
+
+      // Delete middle rack
+      store.deleteRack(rack2!.id);
+
+      // Verify group still exists with remaining racks
+      const afterDelete = store.getRackGroupById(group!.id);
+      expect(afterDelete!.rack_ids).toEqual([rack1!.id, rack3!.id]);
+
+      // Undo and verify full restoration
+      store.undo();
+
+      const afterUndo = store.getRackGroupById(group!.id);
+      expect(afterUndo!.rack_ids).toContain(rack1!.id);
+      expect(afterUndo!.rack_ids).toContain(rack2!.id);
+      expect(afterUndo!.rack_ids).toContain(rack3!.id);
+    });
+  });
+
+  describe("undo/redo state consistency", () => {
+    it("marks layout as dirty after undo", () => {
+      const store = getLayoutStore();
+      store.addRack("Test Rack", 42);
+      store.markClean();
+
+      store.undo();
+
+      expect(store.isDirty).toBe(true);
+    });
+
+    it("marks layout as dirty after redo", () => {
+      const store = getLayoutStore();
+      store.addRack("Test Rack", 42);
+      store.undo();
+      store.markClean();
+
+      store.redo();
+
+      expect(store.isDirty).toBe(true);
+    });
+
+    it("handles interleaved add/delete/undo operations", () => {
+      const store = getLayoutStore();
+      const initialRackCount = store.racks.length;
+      store.clearHistory();
+
+      const rack1 = store.addRack("Rack 1", 42);
+      const rack2 = store.addRack("Rack 2", 42);
+      store.deleteRack(rack1!.id);
+      const rack3 = store.addRack("Rack 3", 42);
+
+      // Current state: initial racks + rack2 + rack3 (rack1 was deleted)
+      expect(store.racks.length).toBe(initialRackCount + 2);
+
+      store.undo(); // Undo add rack3
+      expect(store.racks.length).toBe(initialRackCount + 1);
+      expect(store.getRackById(rack2!.id)).toBeDefined();
+
+      store.undo(); // Undo delete rack1
+      expect(store.racks.length).toBe(initialRackCount + 2);
+      expect(store.getRackById(rack1!.id)).toBeDefined();
+
+      store.redo(); // Redo delete rack1
+      expect(store.racks.length).toBe(initialRackCount + 1);
+      expect(store.getRackById(rack1!.id)).toBeUndefined();
+
+      store.redo(); // Redo add rack3
+      expect(store.racks.length).toBe(initialRackCount + 2);
+      expect(store.getRackById(rack3!.id)).toBeDefined();
+    });
+  });
+});

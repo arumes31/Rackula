@@ -17,6 +17,8 @@ export type CommandType =
   | "REMOVE_DEVICE"
   | "UPDATE_DEVICE_FACE"
   | "UPDATE_DEVICE_NAME"
+  | "ADD_RACK"
+  | "DELETE_RACK"
   | "UPDATE_RACK"
   | "REPLACE_RACK"
   | "CLEAR_RACK"

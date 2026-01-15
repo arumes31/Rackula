@@ -44,6 +44,8 @@ import {
   createUpdateDeviceNameCommand,
   createUpdateDevicePlacementImageCommand,
   createUpdateDeviceColourCommand,
+  createAddRackCommand,
+  createDeleteRackCommand,
   createUpdateRackCommand,
   createClearRackCommand,
   createCreateRackGroupCommand,
@@ -52,6 +54,7 @@ import {
   type DeviceTypeCommandStore,
   type DeviceCommandStore,
   type RackCommandStore,
+  type RackLifecycleCommandStore,
   type RackGroupCommandStore,
 } from "./commands";
 
@@ -348,6 +351,7 @@ function loadLayout(layoutData: Layout): void {
 /**
  * Add a new rack to the layout
  * If this is the first rack, it also sets the layout name
+ * Uses undo/redo support via command pattern
  * @param name - Rack name
  * @param height - Rack height in U
  * @param width - Rack width in inches (10 or 19)
@@ -382,12 +386,15 @@ function addRack(
 
   // If this is the first rack, sync layout name
   const isFirstRack = layout.racks.length === 0;
+  if (isFirstRack) {
+    layout = { ...layout, name };
+  }
 
-  layout = {
-    ...layout,
-    name: isFirstRack ? name : layout.name,
-    racks: [...layout.racks, newRack],
-  };
+  // Use recorded action for undo/redo support
+  const history = getHistoryStore();
+  const adapter = getRackLifecycleCommandAdapter();
+  const command = createAddRackCommand(newRack, adapter);
+  history.execute(command);
   isDirty = true;
 
   // Set as active rack
@@ -547,34 +554,23 @@ function updateRackView(id: string, view: RackView): void {
 /**
  * Delete a rack from the layout
  * Also removes the rack from any groups it belongs to
+ * Uses undo/redo support via command pattern
  * @param id - Rack ID to delete
  */
 function deleteRack(id: string): void {
-  const rackIndex = layout.racks.findIndex((r) => r.id === id);
-  if (rackIndex === -1) return;
+  const rack = layout.racks.find((r) => r.id === id);
+  if (!rack) return;
 
-  // Remove rack from array
-  const newRacks = layout.racks.filter((r) => r.id !== id);
+  // Find groups that contain this rack (for undo restoration)
+  const affectedGroups = (layout.rack_groups ?? [])
+    .filter((g) => g.rack_ids.includes(id))
+    .map((g) => JSON.parse(JSON.stringify(g)) as RackGroup);
 
-  // Remove rack from any groups and clean up empty groups
-  const newGroups = (layout.rack_groups ?? [])
-    .map((group) => ({
-      ...group,
-      rack_ids: group.rack_ids.filter((rackId) => rackId !== id),
-    }))
-    .filter((group) => group.rack_ids.length > 0);
-
-  layout = {
-    ...layout,
-    racks: newRacks,
-    rack_groups: newGroups.length > 0 ? newGroups : undefined,
-  };
-
-  // If we deleted the active rack, set active to first remaining rack
-  if (activeRackId === id) {
-    activeRackId = newRacks[0]?.id ?? null;
-  }
-
+  // Use recorded action for undo/redo support
+  const history = getHistoryStore();
+  const adapter = getRackLifecycleCommandAdapter();
+  const command = createDeleteRackCommand(rack, affectedGroups, adapter);
+  history.execute(command);
   isDirty = true;
 }
 
@@ -945,6 +941,112 @@ function getRackGroupCommandAdapter(): RackGroupCommandStore {
     createRackGroupRaw,
     updateRackGroupRaw,
     deleteRackGroupRaw,
+  };
+}
+
+// =============================================================================
+// Rack Raw Actions (for undo/redo system)
+// =============================================================================
+
+/**
+ * Raw add rack (bypasses history)
+ * @param rack - Rack to add
+ */
+function addRackRaw(rack: Rack): void {
+  layout = {
+    ...layout,
+    racks: [...layout.racks, rack],
+  };
+}
+
+/**
+ * Raw delete rack (bypasses history)
+ * Removes the rack and cleans up group memberships
+ * @param id - Rack ID to delete
+ * @returns The deleted rack and affected groups (with original rack_ids), or undefined if not found
+ */
+function deleteRackRaw(
+  id: string,
+): { rack: Rack; groups: RackGroup[] } | undefined {
+  const rack = layout.racks.find((r) => r.id === id);
+  if (!rack) return undefined;
+
+  // Find groups that contain this rack (capture their state before modification)
+  const affectedGroups = (layout.rack_groups ?? [])
+    .filter((g) => g.rack_ids.includes(id))
+    .map((g) => ({ ...g })); // Shallow copy to preserve rack_ids
+
+  // Remove rack from array
+  const newRacks = layout.racks.filter((r) => r.id !== id);
+
+  // Remove rack from groups and clean up empty groups
+  const newGroups = (layout.rack_groups ?? [])
+    .map((group) => ({
+      ...group,
+      rack_ids: group.rack_ids.filter((rackId) => rackId !== id),
+    }))
+    .filter((group) => group.rack_ids.length > 0);
+
+  layout = {
+    ...layout,
+    racks: newRacks,
+    rack_groups: newGroups.length > 0 ? newGroups : undefined,
+  };
+
+  // Update activeRackId if we deleted the active rack
+  if (activeRackId === id) {
+    activeRackId = newRacks[0]?.id ?? null;
+  }
+
+  return { rack, groups: affectedGroups };
+}
+
+/**
+ * Raw restore rack with group memberships (bypasses history)
+ * Used by undo to restore a deleted rack
+ * @param rack - Rack to restore
+ * @param groups - Groups to restore (with original rack_ids including this rack)
+ */
+function restoreRackRaw(rack: Rack, groups: RackGroup[]): void {
+  // Add the rack back
+  layout = {
+    ...layout,
+    racks: [...layout.racks, rack],
+  };
+
+  // Restore group memberships
+  for (const restoredGroup of groups) {
+    const existingGroup = (layout.rack_groups ?? []).find(
+      (g) => g.id === restoredGroup.id,
+    );
+    if (existingGroup) {
+      // Group still exists, restore the rack_ids
+      layout = {
+        ...layout,
+        rack_groups: (layout.rack_groups ?? []).map((g) =>
+          g.id === restoredGroup.id
+            ? { ...g, rack_ids: restoredGroup.rack_ids }
+            : g,
+        ),
+      };
+    } else {
+      // Group was deleted (was empty), recreate it
+      layout = {
+        ...layout,
+        rack_groups: [...(layout.rack_groups ?? []), restoredGroup],
+      };
+    }
+  }
+}
+
+/**
+ * Get the command adapter for rack lifecycle operations
+ */
+function getRackLifecycleCommandAdapter(): RackLifecycleCommandStore {
+  return {
+    addRackRaw,
+    deleteRackRaw,
+    restoreRackRaw,
   };
 }
 
