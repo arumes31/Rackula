@@ -37,6 +37,14 @@ Plan your rack layout. Drag your devices in, move them around, export it. It run
 - **Export to PNG, PDF, SVG** for your documentation or for printing and staring at
 - **QR code sharing** - your layout lives in a URL, scan it and it just shows up
 
+## But _Why?_
+
+You might ask, why should I make an imaginary rack like some sort of IT cosplay? And to that I would say, "fine then! don't! SCRAM!" but also, consider:
+
+- **Plan your layouts** before you build them. It's a lot easier to move your mouse than that 4U server full of hard drives. Your shoulder will thank you.
+- **Document existing layouts** so you know what is where.
+- **Because you can**
+
 ## Get Started
 
 ### **Use it right now:** [count.racku.la](https://count.racku.la)
