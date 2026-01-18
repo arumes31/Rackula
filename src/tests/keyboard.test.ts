@@ -659,9 +659,9 @@ describe("KeyboardHandler Component", () => {
       const initialPosition = layoutStore.rack!.devices[0]!.position;
       await fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
 
-      // Should move by 1/3U instead of full device height (1/3U = UNITS_PER_U / 3 = 2 internal units)
+      // Should move by 1/3U instead of full device height
       expect(layoutStore.rack!.devices[0]!.position).toBe(
-        initialPosition + UNITS_PER_U / 3,
+        initialPosition + toInternalUnits(1 / 3),
       );
     });
 
@@ -686,9 +686,9 @@ describe("KeyboardHandler Component", () => {
       const initialPosition = layoutStore.rack!.devices[0]!.position;
       await fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });
 
-      // Should move by 1/3U instead of full device height (1/3U = UNITS_PER_U / 3 = 2 internal units)
+      // Should move by 1/3U instead of full device height
       expect(layoutStore.rack!.devices[0]!.position).toBe(
-        initialPosition - UNITS_PER_U / 3,
+        initialPosition - toInternalUnits(1 / 3),
       );
     });
 
@@ -741,21 +741,18 @@ describe("KeyboardHandler Component", () => {
       render(KeyboardHandler);
 
       // Move up 1/3U - position 5⅓ is valid (no collision - device at U7)
-      // U5⅓ = 5 * 6 + 2 = 32 internal units
       await fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
       expect(layoutStore.rack!.devices[0]!.position).toBe(
-        toInternalUnits(5) + 2,
+        toInternalUnits(5) + toInternalUnits(1 / 3),
       );
 
       // Move up another 1/3U - position 5⅔ is valid (gap exists before U7)
-      // U5⅔ = 5 * 6 + 4 = 34 internal units
       await fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
       expect(layoutStore.rack!.devices[0]!.position).toBe(
-        toInternalUnits(5) + 4,
+        toInternalUnits(5) + 2 * toInternalUnits(1 / 3),
       );
 
-      // Move up another 1/3U - position 6 is valid
-      // U6 = 6 * 6 = 36 internal units
+      // Move up another 1/3U - position 6 is valid (3 × 1/3U = 1U)
       await fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
       expect(layoutStore.rack!.devices[0]!.position).toBe(toInternalUnits(6));
     });
@@ -781,9 +778,9 @@ describe("KeyboardHandler Component", () => {
       const initialPosition = layoutStore.rack!.devices[0]!.position;
       await fireEvent.keyDown(window, { key: "ArrowUp", shiftKey: true });
 
-      // Should move by 1/3U, not by device height (2U) - 1/3U = UNITS_PER_U / 3 = 2 internal units
+      // Should move by 1/3U, not by device height (2U)
       expect(layoutStore.rack!.devices[0]!.position).toBe(
-        initialPosition + UNITS_PER_U / 3,
+        initialPosition + toInternalUnits(1 / 3),
       );
     });
   });
