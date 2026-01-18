@@ -6,7 +6,6 @@ Rackula is a browser-based rack layout designer for homelabbers. It runs entirel
 
 ### Design Principles
 
-- **ADHD-friendly**: Minimal decision points, focused workflows
 - **Lightweight**: Static frontend, no backend dependencies
 - **Portable**: Self-contained `.Rackula.zip` archives with embedded images
 - **Single-rack focus**: Intentional simplicity over multi-rack complexity
@@ -178,8 +177,8 @@ No legacy support or migration code. Features are implemented as if they're the 
 
 | Environment | URL           | Trigger        | Use Case         |
 | ----------- | ------------- | -------------- | ---------------- |
-| Dev         | dev.racku.la  | Push to `main` | Preview, testing |
-| Prod        | app.racku.la  | Git tag `v*`   | Live users       |
+| Dev         | d.racku.la  | Push to `main` | Preview, testing |
+| Prod        | count.racku.la  | Git tag `v*`   | Live users       |
 
 ## Documentation Map
 
@@ -190,7 +189,6 @@ No legacy support or migration code. Features are implemented as if they're the 
 | `docs/reference/GITHUB-WORKFLOW.md` | GitHub Issues workflow                |
 | `docs/guides/TESTING.md`            | Testing patterns and commands         |
 | `docs/guides/ACCESSIBILITY.md`      | A11y compliance checklist             |
-| `docs/planning/ROADMAP.md`          | Version planning and vision           |
 
 ## See Also
 
