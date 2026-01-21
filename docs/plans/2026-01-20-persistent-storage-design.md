@@ -21,6 +21,9 @@
 | Import support    | Add Import button to StartScreen           | Common onboarding flow                      |
 | List metadata     | Add rack/device counts                     | Lightweight, helps identify layouts         |
 | API fallback      | Fall back to localStorage with warning     | App remains usable if API down              |
+| Unicode names     | UUID suffix for empty slugs                | Supports all-Unicode names like "我的机架"  |
+| Corrupted files   | Show with error badge, block opening       | Users see their files, can delete them      |
+| Multi-user        | Document as single-user design             | KISS - no locking, no sessions              |
 
 ---
 
@@ -146,6 +149,7 @@ export const LayoutListItemSchema = z.object({
   updatedAt: z.string().datetime(),
   rackCount: z.number(),
   deviceCount: z.number(),
+  valid: z.boolean().default(true), // false if YAML is corrupted
 });
 
 export type LayoutMetadata = z.infer<typeof LayoutMetadataSchema>;
@@ -199,16 +203,23 @@ export async function ensureDataDir(): Promise<void> {
 
 /**
  * Slugify a layout name to create a safe filename
+ * Handles Unicode names by appending UUID suffix if result is empty
  */
 export function slugify(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 100) || "untitled"
-  );
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+
+  // Handle empty results (e.g., all-Unicode names like "我的机架")
+  if (!slug) {
+    const uuid = crypto.randomUUID().slice(0, 8);
+    return `untitled-${uuid}`;
+  }
+
+  return slug;
 }
 
 /**
@@ -220,6 +231,7 @@ function countDevices(racks: Array<{ devices?: unknown[] }>): number {
 
 /**
  * List all layouts in the data directory
+ * Returns invalid files with valid: false so UI can show error badge
  */
 export async function listLayouts(): Promise<LayoutListItem[]> {
   await ensureDataDir();
@@ -232,27 +244,52 @@ export async function listLayouts(): Promise<LayoutListItem[]> {
   const layouts: LayoutListItem[] = [];
 
   for (const file of yamlFiles) {
+    const filePath = join(DATA_DIR, file);
+    const id = basename(file, ".yaml").replace(".yml", "");
+
     try {
-      const filePath = join(DATA_DIR, file);
       const content = await readFile(filePath, "utf-8");
       const parsed = yaml.load(content) as unknown;
       const metadata = LayoutMetadataSchema.safeParse(parsed);
+      const stats = await stat(filePath);
 
       if (metadata.success) {
-        const stats = await stat(filePath);
         const racks = metadata.data.racks ?? [];
         layouts.push({
-          id: basename(file, ".yaml").replace(".yml", ""),
+          id,
           name: metadata.data.name,
           version: metadata.data.version,
           updatedAt: stats.mtime.toISOString(),
           rackCount: racks.length,
           deviceCount: countDevices(racks),
+          valid: true,
         });
+      } else {
+        // Invalid YAML structure - include with error flag
+        layouts.push({
+          id,
+          name: id, // Use filename as name
+          version: "unknown",
+          updatedAt: stats.mtime.toISOString(),
+          rackCount: 0,
+          deviceCount: 0,
+          valid: false,
+        });
+        console.warn(`Invalid layout file: ${file}`, metadata.error.message);
       }
-    } catch {
-      // Skip files that can't be parsed
-      console.warn(`Skipping invalid layout file: ${file}`);
+    } catch (e) {
+      // File read/parse error - include with error flag
+      const stats = await stat(filePath).catch(() => ({ mtime: new Date() }));
+      layouts.push({
+        id,
+        name: id,
+        version: "unknown",
+        updatedAt: stats.mtime.toISOString(),
+        rackCount: 0,
+        deviceCount: 0,
+        valid: false,
+      });
+      console.warn(`Failed to read layout file: ${file}`, e);
     }
   }
 
@@ -953,8 +990,14 @@ describe("slugify", () => {
     expect(slugify("Rack #1 (Main)")).toBe("rack-1-main");
   });
 
-  it("handles empty string", () => {
-    expect(slugify("")).toBe("untitled");
+  it("handles empty string with UUID suffix", () => {
+    const result = slugify("");
+    expect(result).toMatch(/^untitled-[a-f0-9]{8}$/);
+  });
+
+  it("handles all-Unicode names with UUID suffix", () => {
+    const result = slugify("我的机架");
+    expect(result).toMatch(/^untitled-[a-f0-9]{8}$/);
   });
 
   it("truncates long names", () => {
@@ -1197,6 +1240,7 @@ export interface SavedLayoutItem {
   updatedAt: string;
   rackCount: number;
   deviceCount: number;
+  valid: boolean; // false if YAML is corrupted
 }
 
 /**
@@ -1634,6 +1678,12 @@ git commit -m "feat: add SaveStatus component with bits-ui Progress"
   }
 
   async function handleOpenLayout(item: SavedLayoutItem) {
+    // Don't allow opening invalid layouts
+    if (!item.valid) {
+      toastStore.error(`"${item.name}" is corrupted and cannot be opened`);
+      return;
+    }
+
     try {
       const layout = await loadSavedLayout(item.id);
       layoutStore.loadLayout(layout);
@@ -1782,13 +1832,27 @@ git commit -m "feat: add SaveStatus component with bits-ui Progress"
               <li>
                 <button
                   class="layout-item"
+                  class:invalid={!item.valid}
                   onclick={() => handleOpenLayout(item)}
                   disabled={deletingId === item.id}
                 >
                   <div class="layout-info">
-                    <span class="layout-name">{item.name}</span>
+                    <span class="layout-name">
+                      {item.name}
+                      {#if !item.valid}
+                        <span class="error-badge" title="Corrupted file">
+                          <IconWarning size={14} />
+                        </span>
+                      {/if}
+                    </span>
                     <span class="layout-meta">
-                      {formatCounts(item)} · {formatDate(item.updatedAt)}
+                      {#if item.valid}
+                        {formatCounts(item)} · {formatDate(item.updatedAt)}
+                      {:else}
+                        <span class="error-text">File corrupted</span> · {formatDate(
+                          item.updatedAt,
+                        )}
+                      {/if}
                     </span>
                   </div>
                   <button
@@ -1949,6 +2013,27 @@ git commit -m "feat: add SaveStatus component with bits-ui Progress"
   .layout-item:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .layout-item.invalid {
+    border-color: var(--color-error);
+    background: var(--color-error-bg);
+    cursor: not-allowed;
+  }
+
+  .layout-item.invalid:hover {
+    border-color: var(--color-error);
+  }
+
+  .error-badge {
+    display: inline-flex;
+    color: var(--color-error);
+    margin-left: var(--spacing-xs);
+    vertical-align: middle;
+  }
+
+  .error-text {
+    color: var(--color-error);
   }
 
   .layout-info {
@@ -2367,6 +2452,7 @@ Create comprehensive self-hosting documentation covering:
 - Environment variables
 - Security considerations
 - Troubleshooting
+- **Single-user design note**: Document that persistence is designed for single-user deployments (personal homelab tool). Multiple users editing concurrently will have last-write-wins behavior without warnings. For multi-user scenarios, recommend separate Rackula instances per user.
 
 **Commit:**
 
@@ -2432,14 +2518,17 @@ git commit -m "ci: add API image build to deployment workflow"
 
 This plan implements persistent storage with the following improvements from architectural review:
 
-| Feature             | Implementation                                                      |
-| ------------------- | ------------------------------------------------------------------- |
-| **Asset endpoints** | `/api/assets/:layoutId/:deviceSlug/:face` for image upload/download |
-| **Save feedback**   | `SaveStatus.svelte` with bits-ui Progress for indeterminate state   |
-| **ID tracking**     | `currentLayoutId` state in App.svelte for rename handling           |
-| **Import support**  | "Import File" button on StartScreen                                 |
-| **List metadata**   | `rackCount` and `deviceCount` in API response                       |
-| **API fallback**    | Graceful degradation to localStorage when API unavailable           |
+| Feature                | Implementation                                                      |
+| ---------------------- | ------------------------------------------------------------------- |
+| **Asset endpoints**    | `/api/assets/:layoutId/:deviceSlug/:face` for image upload/download |
+| **Save feedback**      | `SaveStatus.svelte` with bits-ui Progress for indeterminate state   |
+| **ID tracking**        | `currentLayoutId` state in App.svelte for rename handling           |
+| **Import support**     | "Import File" button on StartScreen                                 |
+| **List metadata**      | `rackCount` and `deviceCount` in API response                       |
+| **API fallback**       | Graceful degradation to localStorage when API unavailable           |
+| **Unicode support**    | UUID suffix for slugs when all-Unicode names produce empty results  |
+| **Corrupted files**    | Show with `valid: false` flag and error badge, block opening        |
+| **Single-user design** | Documented in self-hosting guide, last-write-wins without warnings  |
 
 **Total tasks:** 19
 **Estimated commits:** 19
