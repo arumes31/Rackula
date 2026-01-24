@@ -15,6 +15,7 @@
     ZOOM_MAX,
   } from "$lib/stores/canvas.svelte";
   import { getUIStore } from "$lib/stores/ui.svelte";
+  import { DRAWER_WIDTH } from "$lib/constants/layout";
   import { debug } from "$lib/utils/debug";
   import { getPlacementStore } from "$lib/stores/placement.svelte";
   // Note: getViewportStore removed - was only used for PlacementIndicator condition
@@ -132,7 +133,12 @@
       hapticSuccess();
       placementStore.completePlacement();
       // Reset view to show full rack after placement completes
-      canvasStore.fitAll(layoutStore.racks, layoutStore.rack_groups);
+      const rightOffset = uiStore.rightDrawerOpen ? DRAWER_WIDTH : 0;
+      canvasStore.fitAll(
+        layoutStore.racks,
+        layoutStore.rack_groups,
+        rightOffset,
+      );
     }
   }
 
@@ -262,7 +268,8 @@
 
       // Center content on initial load
       requestAnimationFrame(() => {
-        canvasStore.fitAll(racks, rackGroups);
+        const rightOffset = uiStore.rightDrawerOpen ? DRAWER_WIDTH : 0;
+        canvasStore.fitAll(racks, rackGroups, rightOffset);
       });
 
       // Set up ResizeObserver to auto-fit when viewport changes (sidebar collapse, etc.)
@@ -282,7 +289,12 @@
         if (resizeTimeout) clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           debug.log("ResizeObserver: viewport changed, calling fitAll");
-          canvasStore.fitAll(layoutStore.racks, layoutStore.rack_groups);
+          const rightOffset = uiStore.rightDrawerOpen ? DRAWER_WIDTH : 0;
+          canvasStore.fitAll(
+            layoutStore.racks,
+            layoutStore.rack_groups,
+            rightOffset,
+          );
         }, 300);
       });
 

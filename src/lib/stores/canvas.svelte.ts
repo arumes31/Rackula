@@ -241,12 +241,17 @@ function setCanvasElement(element: HTMLElement): void {
  * Fit all racks in the viewport
  * @param racks - Array of racks from the layout store
  * @param rackGroups - Array of rack groups (for bayed rack handling)
+ * @param rightOffset - Optional offset for right-side overlay (e.g., drawer width)
  */
-function fitAll(racks: Rack[], rackGroups: RackGroup[] = []): void {
+function fitAll(
+  racks: Rack[],
+  rackGroups: RackGroup[] = [],
+  rightOffset: number = 0,
+): void {
   if (!panzoomInstance || !canvasElement || racks.length === 0) return;
 
-  // Get viewport dimensions
-  const viewportWidth = canvasElement.clientWidth;
+  // Get viewport dimensions, accounting for any right-side overlay
+  const viewportWidth = canvasElement.clientWidth - rightOffset;
   const viewportHeight = canvasElement.clientHeight;
 
   // Convert racks to positions and calculate fit
@@ -279,11 +284,13 @@ function fitAll(racks: Rack[], rackGroups: RackGroup[] = []): void {
  * @param rackIds - Array of rack IDs to focus on (pass group rack_ids for bayed groups)
  * @param allRacks - All racks from the layout store (for looking up rack data)
  * @param rackGroups - All rack groups from the layout store (for bayed rack handling)
+ * @param rightOffset - Optional offset for right-side overlay (e.g., drawer width)
  */
 function focusRack(
   rackIds: string[],
   allRacks: Rack[],
   rackGroups: RackGroup[] = [],
+  rightOffset: number = 0,
 ): void {
   if (!panzoomInstance || !canvasElement || rackIds.length === 0) return;
 
@@ -308,8 +315,8 @@ function focusRack(
   ]);
   const focusRacks = allRacks.filter((r) => allRelevantRackIds.has(r.id));
 
-  // Get viewport dimensions
-  const viewportWidth = canvasElement.clientWidth;
+  // Get viewport dimensions, accounting for any right-side overlay
+  const viewportWidth = canvasElement.clientWidth - rightOffset;
   const viewportHeight = canvasElement.clientHeight;
 
   // Calculate positions for ALL racks using the authoritative helper

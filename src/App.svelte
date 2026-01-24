@@ -46,6 +46,7 @@
   import { getSelectionStore } from "$lib/stores/selection.svelte";
   import { getUIStore } from "$lib/stores/ui.svelte";
   import { getCanvasStore } from "$lib/stores/canvas.svelte";
+  import { DRAWER_WIDTH } from "$lib/constants/layout";
   import { getToastStore } from "$lib/stores/toast.svelte";
   import { getImageStore } from "$lib/stores/images.svelte";
   import { getViewportStore } from "$lib/utils/viewport.svelte";
@@ -312,6 +313,8 @@
       layoutStore.addRack(data.name, data.height, data.width);
     }
     dialogStore.close();
+    // Auto-fit after creating new rack so it's visible
+    requestAnimationFrame(() => handleFitAll());
   }
 
   function handleNewRackCancel() {
@@ -742,7 +745,8 @@
   }
 
   function handleFitAll() {
-    canvasStore.fitAll(layoutStore.racks, layoutStore.rack_groups);
+    const rightOffset = uiStore.rightDrawerOpen ? DRAWER_WIDTH : 0;
+    canvasStore.fitAll(layoutStore.racks, layoutStore.rack_groups, rightOffset);
   }
 
   function handleToggleTheme() {
@@ -1099,7 +1103,13 @@
 
   function handleRackContextFocus(rackIds: string[]) {
     if (rackIds.length === 0) return;
-    canvasStore.focusRack(rackIds, layoutStore.racks, layoutStore.rack_groups);
+    const rightOffset = uiStore.rightDrawerOpen ? DRAWER_WIDTH : 0;
+    canvasStore.focusRack(
+      rackIds,
+      layoutStore.racks,
+      layoutStore.rack_groups,
+      rightOffset,
+    );
   }
 
   // Handle mobile device selection from palette (enters placement mode)

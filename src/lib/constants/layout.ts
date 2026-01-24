@@ -102,6 +102,12 @@ export const RACK_GAP = 24;
 export const FIT_ALL_PADDING = 48;
 
 /**
+ * Width of the right drawer (EditPanel) in pixels
+ * Must match --drawer-width in tokens.css
+ */
+export const DRAWER_WIDTH = 320;
+
+/**
  * Maximum zoom level for fit-all
  * Prevents excessive zoom on small content
  */
