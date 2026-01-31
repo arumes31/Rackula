@@ -3,7 +3,8 @@
  * Exports all brand-specific device packs
  */
 
-import type { DeviceType } from "$lib/types";
+import type { DeviceType, Airflow } from "$lib/types";
+import { debug } from "$lib/utils/debug";
 import { ubiquitiDevices } from "./ubiquiti";
 import { mikrotikDevices } from "./mikrotik";
 import { tplinkDevices } from "./tp-link";
@@ -317,13 +318,74 @@ export function findBrandDevice(slug: string): DeviceType | undefined {
 // Cached set of all brand device slugs
 let brandSlugsCache: Set<string> | null = null;
 
+// Track if we've already warned about duplicates (avoid spam in dev mode)
+let duplicateWarningShown = false;
+
 /**
  * Get a Set of all brand device slugs for fast lookup
  * Used to distinguish brand devices from custom devices
+ *
+ * Validates for duplicate slugs on first access and warns in development.
  */
 export function getBrandSlugs(): Set<string> {
   if (!brandSlugsCache) {
-    brandSlugsCache = new Set(getAllBrandDevices().map((d) => d.slug));
+    const devices = getAllBrandDevices();
+    const slugs = new Set<string>();
+    const duplicateSlugs = new Set<string>();
+
+    for (const device of devices) {
+      if (slugs.has(device.slug)) {
+        duplicateSlugs.add(device.slug);
+      } else {
+        slugs.add(device.slug);
+      }
+    }
+
+    // Warn about duplicates in development mode only
+    if (
+      duplicateSlugs.size > 0 &&
+      !duplicateWarningShown &&
+      import.meta.env.DEV
+    ) {
+      duplicateWarningShown = true;
+      const uniqueDuplicates = Array.from(duplicateSlugs);
+      debug.warn(
+        "[Brand Packs] Duplicate device slugs detected (%d): %s. Duplicate slugs will cause incorrect device lookups.",
+        uniqueDuplicates.length,
+        uniqueDuplicates.join(", "),
+      );
+    }
+
+    brandSlugsCache = slugs;
   }
   return brandSlugsCache;
+}
+
+/**
+ * Default airflow direction used when a device doesn't specify one
+ */
+export const DEFAULT_AIRFLOW: Airflow = "front-to-rear";
+
+/**
+ * Get a device with normalized properties (airflow defaults applied)
+ * Use this when you need consistent device properties for rendering/logic
+ */
+export function normalizeDevice(
+  device: DeviceType,
+): DeviceType & { airflow: Airflow } {
+  return {
+    ...device,
+    airflow: device.airflow ?? DEFAULT_AIRFLOW,
+  };
+}
+
+/**
+ * Find a device by slug and return it with normalized properties
+ * @returns The normalized DeviceType if found, undefined otherwise
+ */
+export function findBrandDeviceNormalized(
+  slug: string,
+): (DeviceType & { airflow: Airflow }) | undefined {
+  const device = findBrandDevice(slug);
+  return device ? normalizeDevice(device) : undefined;
 }
