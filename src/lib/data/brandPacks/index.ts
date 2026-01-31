@@ -126,6 +126,7 @@ export function getBrandPacks(): BrandSection[] {
       title: "Netgate",
       devices: netgateDevices,
       defaultExpanded: false,
+      icon: "netgate",
     },
     // Storage
     {
@@ -162,6 +163,7 @@ export function getBrandPacks(): BrandSection[] {
       title: "CyberPower",
       devices: cyberpowerDevices,
       defaultExpanded: false,
+      icon: "cyberpower",
     },
     // Servers
     {
@@ -206,6 +208,7 @@ export function getBrandPacks(): BrandSection[] {
       title: "DeskPi",
       devices: deskpiDevices,
       defaultExpanded: false,
+      icon: "deskpi",
     },
     // Cooling
     {
@@ -213,6 +216,7 @@ export function getBrandPacks(): BrandSection[] {
       title: "AC Infinity",
       devices: acInfinityDevices,
       defaultExpanded: false,
+      icon: "acinfinity",
     },
     // Servers - Apple
     {
