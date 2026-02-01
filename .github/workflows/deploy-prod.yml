@@ -186,7 +186,7 @@ jobs:
           # Stop old container if exists (name changed from rackula-app to rackula)
           docker stop rackula-app 2>/dev/null && docker rm rackula-app 2>/dev/null || true
           docker compose pull
-          docker compose up -d
+          docker compose up -d --remove-orphans
 
   smoke-test:
     needs: deploy
