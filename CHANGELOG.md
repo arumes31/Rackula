@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.8] - 2026-02-02
+
+### Fixed
+
+- Persistence API 404 errors on /layouts endpoints - routes now mount at root (#1007, PR #1008)
+- Stale localStorage overwriting newer server data during session storage race conditions (#1012, PR #1014)
+  - Thanks to @Mihai-B for reporting this issue!
+- Auto-save creating empty layout on every visit to root URL (#1003, PR #1013)
+- Nginx /api and /api/ edge case request handling (#1010, PR #1015)
+- CSP script hashes updated to match current build output (PR #1021)
+
+### Added
+
+- Compatibility aliases for /api/\* routes for direct API access (#1009, PR #1019)
+
+### Technical
+
+- Migrated Vitest config to v4 poolOptions format (#1017, PR #1018)
+- Addressed CodeRabbit feedback on session-storage tests (PR #1016)
+
 ## [0.7.7] - 2026-01-31
 
 ### Fixed
