@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.9] - 2026-02-03
+
+### Security
+
+- Fix ReDoS vulnerability in @isaacs/brace-expansion (5.0.0 to 5.0.1, CVSS 9.2) (PR #1038)
+- Fix nginx security header inheritance bug: /assets/ location was silently dropping all security headers (#1037, PR #1038)
+- Add HSTS, Referrer-Policy, and Permissions-Policy headers to all responses (PR #1038)
+- Add 1MB request body size limit on layout PUT endpoints to prevent memory exhaustion (PR #1038)
+- Centralize security headers into shared nginx include snippet to prevent header drift (#1039, PR #1040)
+- Add startup warning when CORS_ORIGIN is unset in production (PR #1040)
+- Update jsPDF 4.0.0 to 4.1.0, resolving 4 CVEs: race condition, XMP injection, PDF injection, BMP DoS (PR #1033)
+
+### Technical
+
+- Bump GitHub Actions: claude-code-action, codeql-action, docker/login-action (PR #1034)
+- Bump development dependencies: Stryker, jsdom, happy-dom, svelte-check, @types/node, globals (PR #1035, #1032, #1031)
+- Remove deprecated X-XSS-Protection header (CSP replaces it) (PR #1038)
+
 ## [0.7.8] - 2026-02-02
 
 ### Fixed
