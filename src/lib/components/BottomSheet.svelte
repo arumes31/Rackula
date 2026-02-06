@@ -6,11 +6,11 @@
   interface Props {
     open: boolean;
     title?: string;
-    onclose?: () => void;
+    onclose: () => void;
     children?: import("svelte").Snippet;
   }
 
-  let { open = $bindable(false), title, onclose, children }: Props = $props();
+  let { open = false, title, onclose, children }: Props = $props();
 
   let sheetElement: HTMLDivElement | null = $state(null);
   let startY = $state(0);
@@ -24,14 +24,15 @@
   const CLOSE_THRESHOLD = 100;
 
   function handleBackdropClick(event: MouseEvent) {
-    if (event.target === event.currentTarget) {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (!sheetElement || !sheetElement.contains(target)) {
       closeSheet();
     }
   }
 
   function closeSheet() {
-    open = false;
-    onclose?.();
+    onclose();
   }
 
   // Swipe-to-dismiss gesture handlers

@@ -1515,7 +1515,7 @@
         {@const canMoveUp = device.position < maxPosition}
         {@const canMoveDown = device.position > 1}
         <BottomSheet
-          bind:open={bottomSheetOpen}
+          open={bottomSheetOpen}
           title={deviceType.model}
           onclose={handleBottomSheetClose}
         >
@@ -1637,7 +1637,7 @@
 
     {#if viewportStore.isMobile && fileSheetOpen}
       <BottomSheet
-        bind:open={fileSheetOpen}
+        open={fileSheetOpen}
         title="File"
         onclose={handleFileSheetClose}
       >
@@ -1669,7 +1669,7 @@
 
     {#if viewportStore.isMobile && deviceLibrarySheetOpen}
       <BottomSheet
-        bind:open={deviceLibrarySheetOpen}
+        open={deviceLibrarySheetOpen}
         title="Device Library"
         onclose={handleDeviceLibrarySheetClose}
       >
@@ -1683,7 +1683,7 @@
     <!-- Mobile rack edit sheet (opened via long press on rack) -->
     {#if viewportStore.isMobile && rackEditSheetOpen && layoutStore.activeRack}
       <BottomSheet
-        bind:open={rackEditSheetOpen}
+        open={rackEditSheetOpen}
         title="Edit Rack"
         onclose={handleRackEditSheetClose}
       >
