@@ -12,7 +12,10 @@ interface WizardOptions {
   height?: number;
 }
 
-const HEIGHT_BY_PRESET: Record<NonNullable<WizardOptions["heightPreset"]>, number> = {
+const HEIGHT_BY_PRESET: Record<
+  NonNullable<WizardOptions["heightPreset"]>,
+  number
+> = {
   1: 12,
   2: 18,
   3: 24,
